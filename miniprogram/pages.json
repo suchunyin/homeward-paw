@@ -1,0 +1,151 @@
+{
+	"pages": [
+		{
+			"path": "pages/index/index",
+			"style": {
+				"navigationBarTitleText": "Homeward Paw",
+				"navigationBarBackgroundColor": "#f59e0b",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/login/login",
+			"style": {
+				"navigationBarTitleText": "登录"
+			}
+		},
+		{
+			"path": "pages/register/register",
+			"style": {
+				"navigationBarTitleText": "注册"
+			}
+		}
+	],
+	"subPackages": [
+		{
+			"root": "pages-pet",
+			"name": "pet",
+			"pages": [
+				{
+					"path": "list/list",
+					"style": {
+						"navigationBarTitleText": "宠物列表"
+					}
+				},
+				{
+					"path": "detail/detail",
+					"style": {
+						"navigationBarTitleText": "宠物详情"
+					}
+				}
+			]
+		},
+		{
+			"root": "pages-user",
+			"name": "user",
+			"pages": [
+				{
+					"path": "profile/profile",
+					"style": {
+						"navigationBarTitleText": "个人中心"
+					}
+				},
+				{
+					"path": "applications/applications",
+					"style": {
+						"navigationBarTitleText": "我的申请"
+					}
+				},
+				{
+					"path": "received/received",
+					"style": {
+						"navigationBarTitleText": "收到的申请"
+					}
+				}
+			]
+		},
+		{
+			"root": "pages-publish",
+			"name": "publish",
+			"pages": [
+				{
+					"path": "index/index",
+					"style": {
+						"navigationBarTitleText": "发布领养"
+					}
+				}
+			]
+		},
+		{
+			"root": "pages-knowledge",
+			"name": "knowledge",
+			"pages": [
+				{
+					"path": "list/list",
+					"style": { "navigationBarTitleText": "救助知识" }
+				},
+				{
+					"path": "detail/detail",
+					"style": { "navigationBarTitleText": "文章详情" }
+				}
+			]
+		},
+		{
+			"root": "pages-activity",
+			"name": "activity",
+			"pages": [
+				{
+					"path": "list/list",
+					"style": { "navigationBarTitleText": "志愿者活动" }
+				},
+				{
+					"path": "detail/detail",
+					"style": { "navigationBarTitleText": "活动详情" }
+				}
+			]
+		},
+		{
+			"root": "pages-donate",
+			"name": "donate",
+			"pages": [
+				{
+					"path": "list/list",
+					"style": { "navigationBarTitleText": "爱心捐赠" }
+				}
+			]
+		},
+		{
+			"root": "pages-cloud",
+			"name": "cloud",
+			"pages": [
+				{
+					"path": "list/list",
+					"style": { "navigationBarTitleText": "我的云养宠" }
+				}
+			]
+		}
+	],
+	"preloadRule": {
+		"pages/index/index": {
+			"network": "all",
+			"packages": ["pet", "user", "knowledge"]
+		},
+		"pages-pet/detail/detail": {
+			"network": "wifi",
+			"packages": ["user", "activity"]
+		}
+	},
+	"globalStyle": {
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "Homeward Paw",
+		"navigationBarBackgroundColor": "#F8F8F8",
+		"backgroundColor": "#F8F8F8"
+	},
+	"easycom": {
+		"autoscan": true,
+		"custom": {
+			"^u-(.*)": "uview-plus/components/u-$1/u-$1.vue"
+		}
+	},
+	"uniIdRouter": {}
+}
