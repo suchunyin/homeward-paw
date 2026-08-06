@@ -1,7 +1,7 @@
 # Ruff 配置 - 宠物救助领养平台
 # 文档: https://docs.astral.sh/ruff/settings/
 
-target-version = "py312"
+target-version = "py310"
 line-length = 110
 
 [lint]

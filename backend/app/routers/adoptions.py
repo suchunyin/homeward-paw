@@ -50,9 +50,7 @@ async def list_my_applications(
     db: AsyncSession = Depends(get_db),
 ):
     result = await db.execute(
-        select(Adoption)
-        .where(Adoption.user_id == current_user.id)
-        .order_by(Adoption.created_at.desc())
+        select(Adoption).where(Adoption.user_id == current_user.id).order_by(Adoption.created_at.desc())
     )
     applications = result.scalars().all()
     return [AdoptionOut.model_validate(a) for a in applications]
@@ -65,10 +63,7 @@ async def list_received_applications(
 ):
     """救助站查看收到的领养申请"""
     result = await db.execute(
-        select(Adoption)
-        .join(Pet)
-        .where(Pet.owner_id == current_user.id)
-        .order_by(Adoption.created_at.desc())
+        select(Adoption).join(Pet).where(Pet.owner_id == current_user.id).order_by(Adoption.created_at.desc())
     )
     applications = result.scalars().all()
     return [AdoptionOut.model_validate(a) for a in applications]
@@ -81,9 +76,7 @@ async def update_application(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(
-        select(Adoption).join(Pet).where(Adoption.id == adoption_id)
-    )
+    result = await db.execute(select(Adoption).join(Pet).where(Adoption.id == adoption_id))
     adoption = result.scalar_one_or_none()
     if not adoption:
         raise HTTPException(status_code=404, detail="申请不存在")

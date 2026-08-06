@@ -6,11 +6,12 @@ from pydantic import BaseModel, EmailStr, Field
 # 用户
 # ═══════════════════════════════════════════
 
+
 class UserRegister(BaseModel):
     username: str = Field(..., min_length=2, max_length=50)
     email: EmailStr
     password: str = Field(..., min_length=6, max_length=50)
-    role: str = "adopter"   # adopter / shelter / volunteer
+    role: str = "adopter"  # adopter / shelter / volunteer
 
 
 class UserLogin(BaseModel):
@@ -41,6 +42,7 @@ class Token(BaseModel):
 # ═══════════════════════════════════════════
 # 宠物
 # ═══════════════════════════════════════════
+
 
 class PetCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=50)
@@ -111,6 +113,7 @@ class PetListOut(BaseModel):
 # 领养申请
 # ═══════════════════════════════════════════
 
+
 class AdoptionCreate(BaseModel):
     pet_id: int
     message: str = ""
@@ -139,9 +142,10 @@ class AdoptionOut(BaseModel):
 # 救助知识文章
 # ═══════════════════════════════════════════
 
+
 class KnowledgeCreate(BaseModel):
     title: str = Field(..., min_length=1, max_length=100)
-    category: str = "care"     # care / medical / law / story
+    category: str = "care"  # care / medical / law / story
     content: str = Field(..., min_length=1)
     summary: str = ""
     cover_image: str = ""
@@ -186,6 +190,7 @@ class KnowledgeListOut(BaseModel):
 # 宠物日记
 # ═══════════════════════════════════════════
 
+
 class DiaryCreate(BaseModel):
     pet_id: int
     content: str = Field(..., min_length=1)
@@ -219,9 +224,10 @@ class DiaryListOut(BaseModel):
 # 健康档案
 # ═══════════════════════════════════════════
 
+
 class HealthRecordCreate(BaseModel):
     pet_id: int
-    record_type: str           # vaccine / deworming / checkup / medical
+    record_type: str  # vaccine / deworming / checkup / medical
     title: str = Field(..., min_length=1, max_length=100)
     description: str = ""
     vet_name: str = ""
@@ -259,6 +265,7 @@ class HealthRecordListOut(BaseModel):
 # 云养宠
 # ═══════════════════════════════════════════
 
+
 class CloudAdoptionCreate(BaseModel):
     pet_id: int
     monthly_amount: float = 0.0
@@ -287,9 +294,10 @@ class CloudAdoptionListOut(BaseModel):
 # 捐赠
 # ═══════════════════════════════════════════
 
+
 class DonationCreate(BaseModel):
     pet_id: int | None = None
-    donation_type: str = "cash"        # cash / goods
+    donation_type: str = "cash"  # cash / goods
     amount: float = 0.0
     goods_name: str = ""
     goods_quantity: int = 1
@@ -328,6 +336,7 @@ class DonationListOut(BaseModel):
 # ═══════════════════════════════════════════
 # 活动
 # ═══════════════════════════════════════════
+
 
 class ActivityCreate(BaseModel):
     title: str = Field(..., min_length=1, max_length=100)

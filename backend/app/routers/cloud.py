@@ -98,9 +98,7 @@ async def cancel_cloud_adoption(
     db: AsyncSession = Depends(get_db),
 ):
     """取消云养"""
-    result = await db.execute(
-        select(CloudAdoption).where(CloudAdoption.id == cloud_id)
-    )
+    result = await db.execute(select(CloudAdoption).where(CloudAdoption.id == cloud_id))
     cloud = result.scalar_one_or_none()
     if not cloud:
         raise HTTPException(status_code=404, detail="记录不存在")

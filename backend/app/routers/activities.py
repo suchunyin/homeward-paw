@@ -119,6 +119,7 @@ async def update_activity(
 # 报名 & 签到
 # ═══════════════════════════════════
 
+
 @router.post("/{activity_id}/enroll", response_model=EnrollmentOut)
 async def enroll_activity(
     activity_id: int,
@@ -147,9 +148,7 @@ async def enroll_activity(
 
     # 检查人数上限
     count_result = await db.execute(
-        select(func.count(ActivityEnrollment.id)).where(
-            ActivityEnrollment.activity_id == activity_id
-        )
+        select(func.count(ActivityEnrollment.id)).where(ActivityEnrollment.activity_id == activity_id)
     )
     enrolled = count_result.scalar() or 0
     if enrolled >= activity.max_participants:
@@ -173,7 +172,7 @@ async def checkin_activity(
     db: AsyncSession = Depends(get_db),
 ):
     """签到"""
-    from datetime import UTC, datetime
+    from datetime import datetime, timezone
 
     result = await db.execute(
         select(ActivityEnrollment).where(
@@ -186,7 +185,7 @@ async def checkin_activity(
         raise HTTPException(status_code=404, detail="未报名此活动")
 
     enrollment.is_checked_in = True
-    enrollment.checked_in_at = datetime.now(UTC)
+    enrollment.checked_in_at = datetime.now(timezone.utc)
     await db.commit()
     return {"message": "签到成功"}
 
@@ -197,8 +196,6 @@ async def list_enrollments(
     db: AsyncSession = Depends(get_db),
 ):
     """活动报名列表"""
-    result = await db.execute(
-        select(ActivityEnrollment).where(ActivityEnrollment.activity_id == activity_id)
-    )
+    result = await db.execute(select(ActivityEnrollment).where(ActivityEnrollment.activity_id == activity_id))
     items = result.scalars().all()
     return {"items": [EnrollmentOut.model_validate(e) for e in items], "total": len(items)}

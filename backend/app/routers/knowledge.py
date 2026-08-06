@@ -25,9 +25,7 @@ async def list_articles(
     db: AsyncSession = Depends(get_db),
 ):
     query = select(KnowledgeArticle).where(KnowledgeArticle.is_published)
-    count_query = select(func.count(KnowledgeArticle.id)).where(
-        KnowledgeArticle.is_published
-    )
+    count_query = select(func.count(KnowledgeArticle.id)).where(KnowledgeArticle.is_published)
 
     if category:
         query = query.where(KnowledgeArticle.category == category)
@@ -69,9 +67,7 @@ async def get_categories():
 
 @router.get("/{article_id}", response_model=KnowledgeDetailOut)
 async def get_article(article_id: int, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(
-        select(KnowledgeArticle).where(KnowledgeArticle.id == article_id)
-    )
+    result = await db.execute(select(KnowledgeArticle).where(KnowledgeArticle.id == article_id))
     article = result.scalar_one_or_none()
     if not article:
         raise HTTPException(status_code=404, detail="文章不存在")
@@ -103,9 +99,7 @@ async def update_article(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(
-        select(KnowledgeArticle).where(KnowledgeArticle.id == article_id)
-    )
+    result = await db.execute(select(KnowledgeArticle).where(KnowledgeArticle.id == article_id))
     article = result.scalar_one_or_none()
     if not article:
         raise HTTPException(status_code=404, detail="文章不存在")
@@ -126,9 +120,7 @@ async def delete_article(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(
-        select(KnowledgeArticle).where(KnowledgeArticle.id == article_id)
-    )
+    result = await db.execute(select(KnowledgeArticle).where(KnowledgeArticle.id == article_id))
     article = result.scalar_one_or_none()
     if not article:
         raise HTTPException(status_code=404, detail="文章不存在")
