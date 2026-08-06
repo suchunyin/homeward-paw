@@ -24,9 +24,9 @@ async def list_articles(
     keyword: str = Query("", description="搜索标题"),
     db: AsyncSession = Depends(get_db),
 ):
-    query = select(KnowledgeArticle).where(KnowledgeArticle.is_published == True)
+    query = select(KnowledgeArticle).where(KnowledgeArticle.is_published)
     count_query = select(func.count(KnowledgeArticle.id)).where(
-        KnowledgeArticle.is_published == True
+        KnowledgeArticle.is_published
     )
 
     if category:

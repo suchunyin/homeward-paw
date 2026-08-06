@@ -17,8 +17,8 @@ async def list_diaries(
     pet_id: int = Query(None, description="按宠物筛选"),
     db: AsyncSession = Depends(get_db),
 ):
-    query = select(PetDiary).where(PetDiary.is_public == True)
-    count_query = select(func.count(PetDiary.id)).where(PetDiary.is_public == True)
+    query = select(PetDiary).where(PetDiary.is_public)
+    count_query = select(func.count(PetDiary.id)).where(PetDiary.is_public)
 
     if pet_id:
         query = query.where(PetDiary.pet_id == pet_id)

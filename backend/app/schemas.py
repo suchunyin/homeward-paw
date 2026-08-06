@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, EmailStr, Field
 
@@ -62,18 +61,18 @@ class PetCreate(BaseModel):
 
 
 class PetUpdate(BaseModel):
-    name: Optional[str] = None
-    breed: Optional[str] = None
-    age: Optional[int] = None
-    gender: Optional[str] = None
-    size: Optional[str] = None
-    description: Optional[str] = None
-    health_status: Optional[str] = None
-    is_vaccinated: Optional[bool] = None
-    is_neutered: Optional[bool] = None
-    status: Optional[str] = None
-    cover_image: Optional[str] = None
-    images: Optional[str] = None
+    name: str | None = None
+    breed: str | None = None
+    age: int | None = None
+    gender: str | None = None
+    size: str | None = None
+    description: str | None = None
+    health_status: str | None = None
+    is_vaccinated: bool | None = None
+    is_neutered: bool | None = None
+    status: str | None = None
+    cover_image: str | None = None
+    images: str | None = None
 
 
 class PetOut(BaseModel):
@@ -118,8 +117,8 @@ class AdoptionCreate(BaseModel):
 
 
 class AdoptionUpdate(BaseModel):
-    status: Optional[str] = None
-    reply: Optional[str] = None
+    status: str | None = None
+    reply: str | None = None
 
 
 class AdoptionOut(BaseModel):
@@ -149,12 +148,12 @@ class KnowledgeCreate(BaseModel):
 
 
 class KnowledgeUpdate(BaseModel):
-    title: Optional[str] = None
-    category: Optional[str] = None
-    content: Optional[str] = None
-    summary: Optional[str] = None
-    cover_image: Optional[str] = None
-    is_published: Optional[bool] = None
+    title: str | None = None
+    category: str | None = None
+    content: str | None = None
+    summary: str | None = None
+    cover_image: str | None = None
+    is_published: bool | None = None
 
 
 class KnowledgeOut(BaseModel):
@@ -228,7 +227,7 @@ class HealthRecordCreate(BaseModel):
     vet_name: str = ""
     vet_clinic: str = ""
     record_date: datetime
-    next_date: Optional[datetime] = None
+    next_date: datetime | None = None
     attachments: str = "[]"
 
 
@@ -241,7 +240,7 @@ class HealthRecordOut(BaseModel):
     vet_name: str
     vet_clinic: str
     record_date: datetime
-    next_date: Optional[datetime] = None
+    next_date: datetime | None = None
     attachments: str
     created_at: datetime
 
@@ -289,7 +288,7 @@ class CloudAdoptionListOut(BaseModel):
 # ═══════════════════════════════════════════
 
 class DonationCreate(BaseModel):
-    pet_id: Optional[int] = None
+    pet_id: int | None = None
     donation_type: str = "cash"        # cash / goods
     amount: float = 0.0
     goods_name: str = ""
@@ -299,13 +298,13 @@ class DonationCreate(BaseModel):
 
 
 class DonationUpdate(BaseModel):
-    is_verified: Optional[bool] = None
+    is_verified: bool | None = None
 
 
 class DonationOut(BaseModel):
     id: int
     user_id: int
-    pet_id: Optional[int] = None
+    pet_id: int | None = None
     donation_type: str
     amount: float
     goods_name: str
@@ -341,14 +340,14 @@ class ActivityCreate(BaseModel):
 
 
 class ActivityUpdate(BaseModel):
-    title: Optional[str] = None
-    description: Optional[str] = None
-    cover_image: Optional[str] = None
-    location: Optional[str] = None
-    start_time: Optional[datetime] = None
-    end_time: Optional[datetime] = None
-    max_participants: Optional[int] = None
-    status: Optional[str] = None
+    title: str | None = None
+    description: str | None = None
+    cover_image: str | None = None
+    location: str | None = None
+    start_time: datetime | None = None
+    end_time: datetime | None = None
+    max_participants: int | None = None
+    status: str | None = None
 
 
 class ActivityOut(BaseModel):
@@ -386,7 +385,7 @@ class EnrollmentOut(BaseModel):
     activity_id: int
     user_id: int
     is_checked_in: bool
-    checked_in_at: Optional[datetime] = None
+    checked_in_at: datetime | None = None
     note: str
     created_at: datetime
 

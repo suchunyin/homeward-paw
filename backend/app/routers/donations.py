@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth import get_current_user
 from app.database import get_db
 from app.models import Donation, User
-from app.schemas import DonationCreate, DonationListOut, DonationOut, DonationUpdate
+from app.schemas import DonationCreate, DonationListOut, DonationOut
 
 router = APIRouter(prefix="/api/donations", tags=["捐赠公示"])
 
@@ -18,8 +18,8 @@ async def list_donations(
     db: AsyncSession = Depends(get_db),
 ):
     """公开捐赠公示列表（仅展示已验证的）"""
-    query = select(Donation).where(Donation.is_verified == True)
-    count_query = select(func.count(Donation.id)).where(Donation.is_verified == True)
+    query = select(Donation).where(Donation.is_verified)
+    count_query = select(func.count(Donation.id)).where(Donation.is_verified)
 
     if pet_id:
         query = query.where(Donation.pet_id == pet_id)

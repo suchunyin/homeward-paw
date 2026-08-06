@@ -173,7 +173,7 @@ async def checkin_activity(
     db: AsyncSession = Depends(get_db),
 ):
     """签到"""
-    from datetime import datetime, timezone
+    from datetime import UTC, datetime
 
     result = await db.execute(
         select(ActivityEnrollment).where(
@@ -186,7 +186,7 @@ async def checkin_activity(
         raise HTTPException(status_code=404, detail="未报名此活动")
 
     enrollment.is_checked_in = True
-    enrollment.checked_in_at = datetime.now(timezone.utc)
+    enrollment.checked_in_at = datetime.now(UTC)
     await db.commit()
     return {"message": "签到成功"}
 

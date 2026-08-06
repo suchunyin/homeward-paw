@@ -1,4 +1,4 @@
-import enum
+from enum import StrEnum
 from datetime import datetime
 
 from sqlalchemy import (
@@ -21,33 +21,33 @@ from app.database import Base
 # 枚举
 # ═══════════════════════════════════════════
 
-class UserRole(str, enum.Enum):
+class UserRole(StrEnum):
     ADOPTER = "adopter"        # 领养者
     SHELTER = "shelter"         # 救助站
     VOLUNTEER = "volunteer"    # 志愿者
     ADMIN = "admin"             # 管理员
 
 
-class PetStatus(str, enum.Enum):
+class PetStatus(StrEnum):
     AVAILABLE = "available"     # 可领养
     PENDING = "pending"          # 审核中
     ADOPTED = "adopted"          # 已领养
     HIDDEN = "hidden"            # 隐藏
 
 
-class PetGender(str, enum.Enum):
+class PetGender(StrEnum):
     MALE = "male"
     FEMALE = "female"
     UNKNOWN = "unknown"
 
 
-class PetSize(str, enum.Enum):
+class PetSize(StrEnum):
     SMALL = "small"
     MEDIUM = "medium"
     LARGE = "large"
 
 
-class AdoptionStatus(str, enum.Enum):
+class AdoptionStatus(StrEnum):
     PENDING = "pending"          # 待审核
     APPROVED = "approved"        # 已通过
     REJECTED = "rejected"        # 已拒绝
@@ -136,24 +136,24 @@ class Adoption(Base):
 # 第二阶段新增模型
 # ═══════════════════════════════════════════
 
-class HealthRecordType(str, enum.Enum):
+class HealthRecordType(StrEnum):
     VACCINE = "vaccine"        # 疫苗
     DEWORMING = "deworming"   # 驱虫
     CHECKUP = "checkup"        # 体检
     MEDICAL = "medical"        # 病例/治疗
 
 
-class DonationType(str, enum.Enum):
+class DonationType(StrEnum):
     CASH = "cash"              # 现金
     GOODS = "goods"            # 物资
 
 
-class CloudAdoptionStatus(str, enum.Enum):
+class CloudAdoptionStatus(StrEnum):
     ACTIVE = "active"
     CANCELLED = "cancelled"
 
 
-class ActivityStatus(str, enum.Enum):
+class ActivityStatus(StrEnum):
     UPCOMING = "upcoming"
     ONGOING = "ongoing"
     COMPLETED = "completed"
