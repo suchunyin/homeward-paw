@@ -1,109 +1,52 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { adoptionApi } from "../api";
-
-interface Adoption {
-  id: number;
-  pet_id: number;
-  status: string;
-  message: string;
-  reply: string;
-  created_at: string;
-}
-
-const STATUS_MAP: Record<string, string> = {
-  pending: "审核中",
-  approved: "已通过",
-  rejected: "已拒绝",
-  cancelled: "已取消",
-  completed: "已完成",
-};
+import { userApi } from "../api";
+import { useAuthStore } from "../stores/authStore";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
-  const [tab, setTab] = useState<"my" | "received">("my");
-  const [applications, setApplications] = useState<Adoption[]>([]);
+  const { token, logout } = useAuthStore();
   const [loading, setLoading] = useState(true);
 
-  const userStr = localStorage.getItem("user");
-  const user = userStr ? JSON.parse(userStr) : null;
-
   useEffect(() => {
-    if (!user) { navigate("/login"); return; }
-    fetchData();
-  }, [tab]);
-
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const res = tab === "my"
-        ? await adoptionApi.myApplications()
-        : await adoptionApi.receivedApplications();
-      setApplications(res.data);
-    } catch (err) {
-      console.error("加载失败", err);
-    } finally {
-      setLoading(false);
+    if (!token) {
+      navigate("/login", { replace: true });
+      return;
     }
-  };
+    userApi
+      .getMe()
+      .catch(() => {
+        logout();
+        navigate("/login", { replace: true });
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
-  const handleReview = async (id: number, status: string) => {
-    try {
-      await adoptionApi.update(id, { status });
-      fetchData();
-    } catch (err) {
-      console.error("操作失败", err);
-    }
-  };
+  if (loading) return <div className="text-center py-[60px] text-[#78716c] text-[15px]">加载中...</div>;
+  if (!token) return null;
 
-  if (!user) return null;
+  const user = useAuthStore.getState().user;
 
   return (
-    <div className="profile-page">
-      <div className="profile-header">
-        <div className="avatar-circle">🐾</div>
-        <h2>{user.username}</h2>
-        <p>{user.role === "shelter" ? "救助站" : "领养者"} · {user.email}</p>
-      </div>
-
-      <div className="tab-bar">
-        <button className={tab === "my" ? "active" : ""} onClick={() => setTab("my")}>
-          我的申请
-        </button>
-        {user.role === "shelter" && (
-          <button className={tab === "received" ? "active" : ""} onClick={() => setTab("received")}>
-            收到的申请
-          </button>
-        )}
-      </div>
-
-      {loading ? (
-        <p className="loading-text">加载中...</p>
-      ) : applications.length === 0 ? (
-        <p className="empty-text">暂无记录</p>
-      ) : (
-        <div className="application-list">
-          {applications.map((a) => (
-            <div key={a.id} className="application-card">
-              <div className="app-info">
-                <p><strong>宠物ID:</strong> {a.pet_id}</p>
-                <p><strong>留言:</strong> {a.message || "无"}</p>
-                <p><strong>状态:</strong> <span className={`status-${a.status}`}>{STATUS_MAP[a.status]}</span></p>
-                {a.reply && <p><strong>回复:</strong> {a.reply}</p>}
-                <p className="app-time">{new Date(a.created_at).toLocaleDateString("zh-CN")}</p>
+    <div className="max-w-[700px] mx-auto">
+      <h1 className="text-[24px] mb-6">个人中心</h1>
+      {user && (
+        <div className="bg-white rounded-[12px] border border-[#e7e5e4] p-6 flex items-center gap-6">
+          <div className="w-20 h-20 rounded-full bg-[#fef3c7] flex items-center justify-center overflow-hidden flex-shrink-0">
+            {user.avatar ? (
+              <img src={user.avatar} alt="头像" className="w-full h-full object-cover" />
+            ) : (
+              <div className="text-[36px] text-[#d97706]">
+                {user.username.charAt(0).toUpperCase()}
               </div>
-              {tab === "received" && a.status === "pending" && (
-                <div className="app-actions">
-                  <button className="btn btn-primary btn-sm" onClick={() => handleReview(a.id, "approved")}>
-                    通过
-                  </button>
-                  <button className="btn btn-danger btn-sm" onClick={() => handleReview(a.id, "rejected")}>
-                    拒绝
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
+            )}
+          </div>
+          <div className="profile-info">
+            <h2 className="text-[20px] mb-1">{user.username}</h2>
+            <p className="text-[14px] text-[#78716c] mb-1">邮箱：{user.email}</p>
+            <p className="text-[14px] text-[#78716c] mb-1">手机：{user.phone || "未绑定"}</p>
+            <p className="text-[14px] text-[#78716c]">角色：{user.role}</p>
+          </div>
         </div>
       )}
     </div>

@@ -18,47 +18,39 @@ export default function KnowledgeDetailPage() {
     if (!id) return;
     setLoading(true);
     knowledgeApi
-      .detail(Number(id))
+      .get(Number(id))
       .then((res) => setArticle(res.data))
       .finally(() => setLoading(false));
   }, [id]);
 
-  if (loading) return <div className="loading-text">加载中...</div>;
-  if (!article) return <div className="empty-text">文章不存在</div>;
+  if (loading) return <div className="text-center py-[60px] text-[#78716c] text-[15px]">加载中...</div>;
+  if (!article) return <div className="text-center py-[60px] text-[#78716c] text-[15px]">文章不存在</div>;
 
   return (
-    <div className="pet-detail-page">
-      <Link to="/knowledge" style={{ color: "var(--text-muted)", fontSize: 14 }}>
+    <div className="max-w-[800px] mx-auto">
+      <Link to="/knowledge" className="text-[#78716c] text-[14px] no-underline">
         ← 返回知识库
       </Link>
-      <div style={{ marginTop: 16 }}>
+      <div className="mt-4">
         <span
-          style={{
-            background: "#fef3c7",
-            color: "#d97706",
-            padding: "4px 14px",
-            borderRadius: 20,
-            fontSize: 13,
-            fontWeight: 600,
-          }}
+          className="bg-[#fef3c7] text-[#d97706] px-3.5 py-1 rounded-[20px] text-[13px] font-semibold"
         >
           {CATEGORY_MAP[article.category] || article.category}
         </span>
       </div>
-      <h1 style={{ fontSize: 28, marginTop: 16, marginBottom: 8 }}>{article.title}</h1>
-      <div className="pet-meta" style={{ marginBottom: 24 }}>
+      <h1 className="text-[28px] mt-4 mb-2">{article.title}</h1>
+      <div className="text-[13px] text-[#78716c] mb-6">
         发布于 {new Date(article.created_at).toLocaleDateString()} · 👁 {article.view_count} 次阅读
       </div>
       <div
+        className="article-content"
         style={{
           lineHeight: 2,
           fontSize: 16,
-          whiteSpace: "pre-wrap",
           wordBreak: "break-word",
         }}
-      >
-        {article.content}
-      </div>
+        dangerouslySetInnerHTML={{ __html: article.content }}
+      />
     </div>
   );
 }

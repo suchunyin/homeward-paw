@@ -1,39 +1,45 @@
-import { type FormEvent, useState } from "react";
+import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { petApi } from "../api";
+import { useAuthStore } from "../stores/authStore";
+import ImageUploader from "../components/ImageUploader";
 
 export default function PublishPetPage() {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [form, setForm] = useState({
-    name: "",
-    species: "狗",
-    breed: "",
-    age: 0,
-    gender: "unknown",
-    size: "medium",
-    color: "",
-    description: "",
-    health_status: "",
-    is_vaccinated: false,
-    is_neutered: false,
-    city: "",
-    district: "",
-  });
+  const token = useAuthStore((s) => s.token);
 
-  const handleChange = (field: string, value: any) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-  };
+  const [name, setName] = useState("");
+  const [species, setSpecies] = useState("dog");
+  const [breed, setBreed] = useState("");
+  const [age, setAge] = useState("");
+  const [gender, setGender] = useState("male");
+  const [description, setDescription] = useState("");
+  const [coverImage, setCoverImage] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  if (!token) {
+    navigate("/login", { replace: true });
+    return null;
+  }
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!form.name.trim()) { setError("请输入宠物名称"); return; }
-    setLoading(true);
     setError("");
+    setLoading(true);
     try {
-      await petApi.create(form);
-      navigate("/");
+      const data: Record<string, unknown> = {
+        name,
+        species,
+        breed,
+        age: age ? parseInt(age, 10) : 0,
+        gender,
+        description,
+        cover_image: coverImage || "",
+      };
+
+      await petApi.create(data);
+      navigate("/", { replace: true });
     } catch (err: any) {
       setError(err.response?.data?.detail || "发布失败");
     } finally {
@@ -41,100 +47,84 @@ export default function PublishPetPage() {
     }
   };
 
-  if (!localStorage.getItem("token")) {
-    navigate("/login");
-    return null;
-  }
-
   return (
-    <div className="publish-page">
-      <form className="publish-form" onSubmit={handleSubmit}>
-        <h2>发布领养信息</h2>
-        {error && <p className="error-msg">{error}</p>}
-
-        <div className="form-row">
-          <label>
-            宠物名称 *
-            <input type="text" value={form.name} onChange={(e) => handleChange("name", e.target.value)} required />
-          </label>
-          <label>
-            物种
-            <select value={form.species} onChange={(e) => handleChange("species", e.target.value)}>
-              <option value="狗">狗</option>
-              <option value="猫">猫</option>
-              <option value="其他">其他</option>
-            </select>
-          </label>
-        </div>
-
-        <div className="form-row">
-          <label>
-            品种
-            <input type="text" value={form.breed} onChange={(e) => handleChange("breed", e.target.value)} placeholder="如：金毛、橘猫" />
-          </label>
-          <label>
-            月龄
-            <input type="number" value={form.age} onChange={(e) => handleChange("age", Number(e.target.value))} min={0} />
-          </label>
-        </div>
-
-        <div className="form-row">
-          <label>
-            性别
-            <select value={form.gender} onChange={(e) => handleChange("gender", e.target.value)}>
-              <option value="male">公</option>
-              <option value="female">母</option>
-              <option value="unknown">未知</option>
-            </select>
-          </label>
-          <label>
-            体型
-            <select value={form.size} onChange={(e) => handleChange("size", e.target.value)}>
-              <option value="small">小型</option>
-              <option value="medium">中型</option>
-              <option value="large">大型</option>
-            </select>
-          </label>
-        </div>
-
-        <div className="form-row">
-          <label>
-            所在城市
-            <input type="text" value={form.city} onChange={(e) => handleChange("city", e.target.value)} />
-          </label>
-          <label>
-            所在区域
-            <input type="text" value={form.district} onChange={(e) => handleChange("district", e.target.value)} />
-          </label>
-        </div>
-
-        <label>
-          颜色
-          <input type="text" value={form.color} onChange={(e) => handleChange("color", e.target.value)} />
+    <div className="max-w-[640px] mx-auto">
+      <h2 className="text-[24px] mb-6">发布领养</h2>
+      <form
+        className="bg-white p-10 rounded-[12px] shadow-[0_2px_12px_rgba(0,0,0,0.06)]"
+        onSubmit={handleSubmit}
+      >
+        {error && (
+          <div className="bg-[#fef2f2] text-[#ef4444] px-4 py-2.5 rounded-[8px] mb-4 text-[14px]">
+            {error}
+          </div>
+        )}
+        <label className="block mb-4 text-[14px] text-[#78716c]">
+          宠物名称
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            className="block w-full mt-1 px-3.5 py-2.5 border border-[#e7e5e4] rounded-[8px] text-[15px] outline-none transition-colors duration-200 focus:border-[#f59e0b]"
+          />
         </label>
-
-        <label>
-          健康状况
-          <textarea rows={2} value={form.health_status} onChange={(e) => handleChange("health_status", e.target.value)} placeholder="疫苗接种、驱虫等信息" />
+        <label className="block mb-4 text-[14px] text-[#78716c]">
+          种类
+          <select
+            value={species}
+            onChange={(e) => setSpecies(e.target.value)}
+            className="block w-full mt-1 px-3.5 py-2.5 border border-[#e7e5e4] rounded-[8px] text-[15px] outline-none transition-colors duration-200 focus:border-[#f59e0b] bg-white"
+          >
+            <option value="dog">狗狗</option>
+            <option value="cat">猫咪</option>
+            <option value="other">其他</option>
+          </select>
         </label>
-
-        <div className="form-row-check">
-          <label className="checkbox-label">
-            <input type="checkbox" checked={form.is_vaccinated} onChange={(e) => handleChange("is_vaccinated", e.target.checked)} />
-            已接种疫苗
-          </label>
-          <label className="checkbox-label">
-            <input type="checkbox" checked={form.is_neutered} onChange={(e) => handleChange("is_neutered", e.target.checked)} />
-            已绝育
-          </label>
-        </div>
-
-        <label>
-          简介
-          <textarea rows={4} value={form.description} onChange={(e) => handleChange("description", e.target.value)} placeholder="描述宠物的性格、习惯等" />
+        <label className="block mb-4 text-[14px] text-[#78716c]">
+          品种
+          <input
+            value={breed}
+            onChange={(e) => setBreed(e.target.value)}
+            className="block w-full mt-1 px-3.5 py-2.5 border border-[#e7e5e4] rounded-[8px] text-[15px] outline-none transition-colors duration-200 focus:border-[#f59e0b]"
+          />
         </label>
-
-        <button className="btn btn-primary btn-block" disabled={loading}>
+        <label className="block mb-4 text-[14px] text-[#78716c]">
+          年龄（月）
+          <input
+            type="number"
+            value={age}
+            onChange={(e) => setAge(e.target.value)}
+            placeholder="如：12"
+            min="0"
+            className="block w-full mt-1 px-3.5 py-2.5 border border-[#e7e5e4] rounded-[8px] text-[15px] outline-none transition-colors duration-200 focus:border-[#f59e0b]"
+          />
+        </label>
+        <label className="block mb-4 text-[14px] text-[#78716c]">
+          性别
+          <select
+            value={gender}
+            onChange={(e) => setGender(e.target.value)}
+            className="block w-full mt-1 px-3.5 py-2.5 border border-[#e7e5e4] rounded-[8px] text-[15px] outline-none transition-colors duration-200 focus:border-[#f59e0b] bg-white"
+          >
+            <option value="male">公</option>
+            <option value="female">母</option>
+          </select>
+        </label>
+        <label className="block mb-4 text-[14px] text-[#78716c]">
+          描述
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={4}
+            className="block w-full mt-1 px-3.5 py-2.5 border border-[#e7e5e4] rounded-[8px] text-[15px] outline-none transition-colors duration-200 focus:border-[#f59e0b] resize-y"
+          />
+        </label>
+        <ImageUploader value={coverImage} onChange={setCoverImage} />
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full inline-flex items-center justify-center px-6 py-2.5 border-none rounded-[8px] text-[14px] font-semibold cursor-pointer transition-all duration-200 no-underline bg-[#f59e0b] text-white hover:bg-[#d97706] disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           {loading ? "发布中..." : "发布"}
         </button>
       </form>

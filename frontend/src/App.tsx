@@ -1,5 +1,10 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./components/Layout";
+import AdminPage from "./pages/AdminPage";
+import AdminKnowledgePage from "./pages/AdminKnowledgePage";
+import AdminActivitiesPage from "./pages/AdminActivitiesPage";
+import KnowledgeEditorPage from "./pages/KnowledgeEditorPage";
+import ActivityEditorPage from "./pages/ActivityEditorPage";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
@@ -29,6 +34,13 @@ function App() {
         <Route path="/donations" element={<DonationsPage />} />
         <Route path="/activities" element={<ActivitiesPage />} />
         <Route path="/activities/:id" element={<ActivityDetailPage />} />
+        <Route path="/admin" element={<AdminPage />} />
+        <Route path="/admin/knowledge" element={<AdminKnowledgePage />} />
+        <Route path="/admin/knowledge/new" element={<KnowledgeEditorPage />} />
+        <Route path="/admin/knowledge/:id/edit" element={<KnowledgeEditorPage />} />
+        <Route path="/admin/activities" element={<AdminActivitiesPage />} />
+        <Route path="/admin/activities/new" element={<ActivityEditorPage />} />
+        <Route path="/admin/activities/:id/edit" element={<ActivityEditorPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { adoptionApi, cloudApi, donationApi, healthApi, petApi } from "../api";
+import { petApi } from "../api";
+import { useAuthStore } from "../stores/authStore";
 
-interface Pet {
+interface PetDetail {
   id: number;
   name: string;
   species: string;
@@ -18,252 +19,119 @@ interface Pet {
   city: string;
   district: string;
   cover_image: string;
+  images: string;
   status: string;
   owner_id: number;
   created_at: string;
 }
 
+const GENDER_MAP: Record<string, string> = {
+  male: "公",
+  female: "母",
+  unknown: "未知",
+};
+
+const STATUS_MAP: Record<string, string> = {
+  available: "可领养",
+  pending: "审核中",
+  adopted: "已领养",
+  hidden: "已隐藏",
+};
+
+const SPECIES_MAP: Record<string, string> = {
+  "狗": "🐶",
+  "猫": "🐱",
+  default: "🐾",
+};
+
 export default function PetDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [pet, setPet] = useState<Pet | null>(null);
-  const [message, setMessage] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [applyMsg, setApplyMsg] = useState("");
-
-  // 健康档案
-  const [healthRecords, setHealthRecords] = useState<any[]>([]);
-  const [showHealthTab, setShowHealthTab] = useState(false);
-
-  // 云养宠
-  const [cloudMsg, setCloudMsg] = useState("");
-  const [cloudAmount, setCloudAmount] = useState(0);
-  const [cloudSubmitting, setCloudSubmitting] = useState(false);
-  const [cloudResult, setCloudResult] = useState("");
-
-  // 捐赠
-  const [donationMsg, setDonationMsg] = useState("");
-  const [donationAmount, setDonationAmount] = useState(0);
-  const [donationSubmitting, setDonationSubmitting] = useState(false);
-  const [donationResult, setDonationResult] = useState("");
-
-  const token = localStorage.getItem("token");
+  const token = useAuthStore((s) => s.token);
+  const [pet, setPet] = useState<PetDetail | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!id) return;
-    petApi.detail(Number(id)).then((res) => setPet(res.data)).catch(() => navigate("/"));
-    healthApi.listByPet(Number(id), { page_size: 20 }).then((res) => setHealthRecords(res.data.items)).catch(() => {});
+    petApi.get(Number(id))
+      .then((res) => setPet(res.data))
+      .catch(() => navigate("/", { replace: true }))
+      .finally(() => setLoading(false));
   }, [id]);
 
-  const handleApply = async () => {
-    if (!token) { navigate("/login"); return; }
-    if (!message.trim()) { setApplyMsg("请填写申请留言"); return; }
-    setSubmitting(true);
-    try {
-      await adoptionApi.create({ pet_id: pet!.id, message });
-      setApplyMsg("申请已提交，请等待救助站审核~");
-      setMessage("");
-    } catch (err: any) {
-      setApplyMsg(err.response?.data?.detail || "提交失败");
-    } finally {
-      setSubmitting(false);
+  const handleCloudAdopt = () => {
+    if (!token) {
+      navigate("/login", { replace: true });
+      return;
     }
+    // cloud adoption logic
   };
 
-  const handleCloudAdopt = async () => {
-    if (!token) { navigate("/login"); return; }
-    if (!cloudAmount || cloudAmount <= 0) { setCloudResult("请输入每月赞助金额"); return; }
-    setCloudSubmitting(true);
-    try {
-      await cloudApi.start({ pet_id: pet!.id, monthly_amount: cloudAmount, message: cloudMsg });
-      setCloudResult("云养成功！感谢你的爱心~");
-      setCloudAmount(0);
-      setCloudMsg("");
-    } catch (err: any) {
-      setCloudResult(err.response?.data?.detail || "云养失败");
-    } finally {
-      setCloudSubmitting(false);
-    }
-  };
-
-  const handleDonate = async () => {
-    if (!token) { navigate("/login"); return; }
-    if (!donationAmount || donationAmount <= 0) { setDonationResult("请输入捐赠金额"); return; }
-    setDonationSubmitting(true);
-    try {
-      await donationApi.create({
-        pet_id: pet!.id,
-        donation_type: "cash",
-        amount: donationAmount,
-        message: donationMsg,
-        is_anonymous: false,
-      });
-      setDonationResult("捐赠已提交，感谢你的爱心！");
-      setDonationAmount(0);
-      setDonationMsg("");
-    } catch (err: any) {
-      setDonationResult(err.response?.data?.detail || "捐赠失败");
-    } finally {
-      setDonationSubmitting(false);
-    }
-  };
-
-  const RECORD_TYPE_LABEL: Record<string, string> = {
-    vaccine: "💉 疫苗",
-    deworming: "🐛 驱虫",
-    checkup: "🩺 体检",
-    medical: "🏥 治疗",
-  };
-
-  if (!pet) return <p className="loading-text">加载中...</p>;
+  if (loading) return <div className="text-center py-[60px] text-[#78716c] text-[15px]">加载中...</div>;
+  if (!pet) return null;
 
   return (
-    <div className="pet-detail-page">
-      <div className="pet-detail-hero">
-        {pet.cover_image ? (
-          <img src={pet.cover_image} alt={pet.name} />
-        ) : (
-          <div className="img-placeholder large">
-            {pet.species === "猫" ? "🐱" : "🐶"}
-          </div>
+    <div className="max-w-[800px] mx-auto">
+      <button
+        onClick={() => navigate(-1)}
+        className="bg-none border-none text-[#78716c] cursor-pointer text-[14px] hover:text-[#ef4444]"
+      >
+        ← 返回
+      </button>
+      {pet.cover_image ? (
+        <img
+          src={pet.cover_image}
+          alt={pet.name}
+          className="w-full h-[360px] object-cover rounded-[12px] mt-4"
+        />
+      ) : (
+        <div className="w-full h-[360px] rounded-[12px] bg-[#fef3c7] flex items-center justify-center text-[100px] mt-4">
+          🐾
+        </div>
+      )}
+      <h1 className="text-[28px] mb-4 mt-4">{pet.name}</h1>
+      <div className="text-[13px] text-[#78716c] mb-1 flex items-center gap-2">
+        <span>{SPECIES_MAP[pet.species] || SPECIES_MAP["default"]} {pet.breed}</span>
+        <span>{pet.age}个月</span>
+        <span>{GENDER_MAP[pet.gender] || pet.gender}</span>
+        <span
+          className={
+            pet.status === "available"
+              ? "text-[#16a34a]"
+              : pet.status === "pending"
+              ? "text-[#d97706]"
+              : pet.status === "adopted"
+              ? "text-[#64748b]"
+              : "text-[#ef4444]"
+          }
+        >
+          {STATUS_MAP[pet.status] || pet.status}
+        </span>
+      </div>
+      {pet.color && <p>毛色：{pet.color}</p>}
+      <p className="text-[#292524] leading-relaxed">{pet.description}</p>
+      {pet.health_status && <p>健康状况：{pet.health_status}</p>}
+      <div className="flex flex-wrap gap-2 mb-6 mt-2">
+        {pet.is_vaccinated && (
+          <span className="bg-[#dcfce7] text-[#166534] px-3 py-1 rounded-[6px] text-[13px]">已疫苗</span>
+        )}
+        {pet.is_neutered && (
+          <span className="bg-[#dbeafe] text-[#1d4ed8] px-3 py-1 rounded-[6px] text-[13px]">已绝育</span>
         )}
       </div>
-
-      <div className="pet-detail-info">
-        <h1>{pet.name}</h1>
-        <div className="pet-tags">
-          <span>{pet.species}</span>
-          {pet.breed && <span>{pet.breed}</span>}
-          <span>{pet.age}个月</span>
-          <span>{pet.gender === "male" ? "公" : pet.gender === "female" ? "母" : "未知"}</span>
-          <span>{pet.size === "small" ? "小型" : pet.size === "medium" ? "中型" : "大型"}</span>
-        </div>
-
-        <div className="pet-section">
-          <h3>所在地</h3>
-          <p>{pet.city} {pet.district}</p>
-        </div>
-
-        <div className="pet-section">
-          <h3>健康状况</h3>
-          <p>{pet.health_status || "暂无信息"}</p>
-          <div className="health-badges">
-            <span className={pet.is_vaccinated ? "badge-green" : "badge-gray"}>
-              {pet.is_vaccinated ? "✅ 已疫苗" : "❌ 未疫苗"}
-            </span>
-            <span className={pet.is_neutered ? "badge-green" : "badge-gray"}>
-              {pet.is_neutered ? "✅ 已绝育" : "❌ 未绝育"}
-            </span>
-          </div>
-        </div>
-
-        <div className="pet-section">
-          <h3>简介</h3>
-          <p>{pet.description || "暂无简介"}</p>
-        </div>
-
-        {/* 领养申请 */}
-        {pet.status === "available" && (
-          <div className="adoption-form">
-            <h3>申请领养</h3>
-            <textarea
-              placeholder="请简单介绍你的养宠经验、居住环境等..."
-              rows={4}
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-            />
-            <button
-              className="btn btn-primary btn-block"
-              onClick={handleApply}
-              disabled={submitting}
-            >
-              {submitting ? "提交中..." : "提交领养申请"}
-            </button>
-            {applyMsg && <p className="apply-msg">{applyMsg}</p>}
-          </div>
-        )}
-
-        {/* 云养宠 */}
-        <div className="adoption-form" style={{ borderTop: "1px solid #eee", marginTop: 20, paddingTop: 16 }}>
-          <h3>☁️ 云养此宠物</h3>
-          <input
-            type="number"
-            placeholder="每月赞助金额（元）"
-            value={cloudAmount || ""}
-            onChange={(e) => setCloudAmount(Number(e.target.value))}
-            style={{ marginBottom: 8 }}
-          />
-          <input
-            type="text"
-            placeholder="寄语（选填）"
-            value={cloudMsg}
-            onChange={(e) => setCloudMsg(e.target.value)}
-            style={{ marginBottom: 12 }}
-          />
-          <button
-            className="btn btn-primary btn-block"
-            onClick={handleCloudAdopt}
-            disabled={cloudSubmitting}
-          >
-            {cloudSubmitting ? "提交中..." : "开始云养"}
-          </button>
-          {cloudResult && <p className="apply-msg">{cloudResult}</p>}
-        </div>
-
-        {/* 捐赠 */}
-        <div className="adoption-form" style={{ borderTop: "1px solid #eee", marginTop: 20, paddingTop: 16 }}>
-          <h3>❤️ 爱心捐赠</h3>
-          <input
-            type="number"
-            placeholder="捐赠金额（元）"
-            value={donationAmount || ""}
-            onChange={(e) => setDonationAmount(Number(e.target.value))}
-            style={{ marginBottom: 8 }}
-          />
-          <input
-            type="text"
-            placeholder="留言（选填）"
-            value={donationMsg}
-            onChange={(e) => setDonationMsg(e.target.value)}
-            style={{ marginBottom: 12 }}
-          />
-          <button
-            className="btn btn-primary btn-block"
-            onClick={handleDonate}
-            disabled={donationSubmitting}
-          >
-            {donationSubmitting ? "提交中..." : "立即捐赠"}
-          </button>
-          {donationResult && <p className="apply-msg">{donationResult}</p>}
-        </div>
-
-        {/* 健康档案 */}
-        {healthRecords.length > 0 && (
-          <div className="pet-section" style={{ marginTop: 20, borderTop: "1px solid #eee", paddingTop: 16 }}>
-            <h3>📋 健康档案</h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {healthRecords.map((r) => (
-                <div key={r.id} style={{
-                  background: "#fafaf5", borderRadius: 12, padding: "12px 16px",
-                  borderLeft: "4px solid #f59e0b"
-                }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                    <strong>{RECORD_TYPE_LABEL[r.record_type] || r.record_type}</strong>
-                    <span style={{ fontSize: 13, color: "#999" }}>
-                      {new Date(r.record_date).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <p style={{ fontSize: 14, margin: "4px 0 0", color: "#555" }}>
-                    {r.title}
-                    {r.vet_name && ` · ${r.vet_name}`}
-                    {r.vet_clinic && ` @ ${r.vet_clinic}`}
-                  </p>
-                  {r.description && <p style={{ fontSize: 13, color: "#78716c", marginTop: 4 }}>{r.description}</p>}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+      {(pet.city || pet.district) && (
+        <p className="text-[12px] text-[#d97706]">📍 {pet.city} {pet.district}</p>
+      )}
+      <div className="mt-4 flex gap-3">
+        <button
+          onClick={handleCloudAdopt}
+          className="inline-flex items-center justify-center px-6 py-2.5 border-none rounded-[8px] text-[14px] font-semibold cursor-pointer transition-all duration-200 no-underline bg-[#f59e0b] text-white hover:bg-[#d97706]"
+        >
+          我要云养
+        </button>
+        <button className="inline-flex items-center justify-center px-6 py-2.5 border border-[#f59e0b] rounded-[8px] text-[14px] font-semibold cursor-pointer transition-all duration-200 no-underline bg-white text-[#d97706] hover:bg-[#fef3c7]">
+          申请领养
+        </button>
       </div>
     </div>
   );

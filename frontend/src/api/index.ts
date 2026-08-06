@@ -1,116 +1,158 @@
 import axios from "axios";
+import { useAuthStore } from "../stores/authStore";
 
 const api = axios.create({
   baseURL: "/api",
   timeout: 15000,
-  headers: { "Content-Type": "application/json" },
 });
 
-// 请求拦截器：自动附加 token
+// 请求拦截 — 自动附加 token（从 Zustand persist store 读取）
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
+  const token = useAuthStore.getState().token;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
 
-// 响应拦截器：统一处理 401
+// 响应拦截 — 401 自动跳转登录
 api.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
+      useAuthStore.getState().logout();
       window.location.href = "/login";
     }
     return Promise.reject(err);
   }
 );
 
-// ─── 用户 API ───
+export default api;
+
+// ── 用户 ──
 export const userApi = {
-  register: (data: { username: string; email: string; password: string; role: string }) =>
+  register: (data: { username: string; email: string; password: string }) =>
     api.post("/users/register", data),
-  login: (data: { username: string; password: string }) =>
+  login: (data: { account: string; password: string }) =>
     api.post("/users/login", data),
   getMe: () => api.get("/users/me"),
+  getList: (params: { page?: number; page_size?: number; role?: string } = {}) =>
+    api.get("/users", { params }),
 };
 
-// ─── 宠物 API ───
+export const adminApi = {
+  listUsers: (params: { page?: number; page_size?: number; role?: string } = {}) =>
+    api.get("/users", { params }),
+  listRoles: () => api.get("/users/roles"),
+  updateUserRole: (userId: number, role: string) =>
+    api.put(`/users/${userId}/role`, { role }),
+  deleteUser: (userId: number) => api.delete(`/users/${userId}`),
+  getRoles: () => api.get("/users/roles"),
+};
+
+// ── 宠物 ──
 export const petApi = {
-  list: (params?: Record<string, any>) =>
+  list: (params: Record<string, unknown> = {}) =>
     api.get("/pets", { params }),
-  detail: (id: number) => api.get(`/pets/${id}`),
-  create: (data: Record<string, any>) => api.post("/pets", data),
-  update: (id: number, data: Record<string, any>) => api.put(`/pets/${id}`, data),
-  remove: (id: number) => api.delete(`/pets/${id}`),
+  get: (id: number) => api.get(`/pets/${id}`),
+  create: (data: object) => api.post("/pets", data),
+  update: (id: number, data: object) => api.put(`/pets/${id}`, data),
+  delete: (id: number) => api.delete(`/pets/${id}`),
 };
 
-// ─── 领养 API ───
+// ── 领养 ──
 export const adoptionApi = {
-  create: (data: { pet_id: number; message: string }) =>
+  create: (data: { pet_id: number; message?: string }) =>
     api.post("/adoptions", data),
-  myApplications: () => api.get("/adoptions"),
-  receivedApplications: () => api.get("/adoptions/received"),
-  update: (id: number, data: Record<string, any>) =>
+  list: (params: Record<string, unknown> = {}) =>
+    api.get("/adoptions", { params }),
+  update: (id: number, data: { status?: string; reply?: string }) =>
     api.put(`/adoptions/${id}`, data),
 };
 
-// ─── 知识文章 API ───
+// ── 救助知识 ──
 export const knowledgeApi = {
-  list: (params?: Record<string, any>) => api.get("/knowledge", { params }),
-  categories: () => api.get("/knowledge/categories"),
-  detail: (id: number) => api.get(`/knowledge/${id}`),
-  create: (data: Record<string, any>) => api.post("/knowledge", data),
-  update: (id: number, data: Record<string, any>) => api.put(`/knowledge/${id}`, data),
-  remove: (id: number) => api.delete(`/knowledge/${id}`),
+  list: (params: { page?: number; page_size?: number; category?: string; keyword?: string } = {}) =>
+    api.get("/knowledge", { params }),
+  get: (id: number) => api.get(`/knowledge/${id}`),
+  getCategories: () => api.get("/knowledge/categories"),
+  // 管理端
+  manageList: (params: { page?: number; page_size?: number; category?: string; status?: string; keyword?: string } = {}) =>
+    api.get("/knowledge/manage/list", { params }),
+  manageGet: (id: number) => api.get(`/knowledge/manage/${id}`),
+  create: (data: { title: string; category: string; content: string; summary?: string; cover_image?: string }) =>
+    api.post("/knowledge", data),
+  update: (id: number, data: object) => api.put(`/knowledge/${id}`, data),
+  publishToggle: (id: number) => api.put(`/knowledge/${id}/publish`),
+  delete: (id: number) => api.delete(`/knowledge/${id}`),
 };
 
-// ─── 宠物日记 API ───
+// ── 日记 ──
 export const diaryApi = {
-  list: (params?: Record<string, any>) => api.get("/diaries", { params }),
-  detail: (id: number) => api.get(`/diaries/${id}`),
-  create: (data: Record<string, any>) => api.post("/diaries", data),
-  remove: (id: number) => api.delete(`/diaries/${id}`),
+  list: (params: Record<string, unknown> = {}) =>
+    api.get("/diaries", { params }),
+  create: (data: object) => api.post("/diaries", data),
+  delete: (id: number) => api.delete(`/diaries/${id}`),
 };
 
-// ─── 健康档案 API ───
+// ── 健康记录 ──
 export const healthApi = {
-  listByPet: (petId: number, params?: Record<string, any>) =>
-    api.get(`/health/pet/${petId}`, { params }),
-  detail: (id: number) => api.get(`/health/${id}`),
-  create: (data: Record<string, any>) => api.post("/health", data),
-  remove: (id: number) => api.delete(`/health/${id}`),
+  list: (petId: number) => api.get(`/health/${petId}`),
+  create: (data: object) => api.post("/health", data),
 };
 
-// ─── 云养宠 API ───
-export const cloudApi = {
-  myCloudPets: () => api.get("/cloud/my"),
-  petSupporters: (petId: number) => api.get(`/cloud/pet/${petId}`),
-  start: (data: { pet_id: number; monthly_amount: number; message: string }) =>
-    api.post("/cloud", data),
-  cancel: (id: number) => api.post(`/cloud/${id}/cancel`),
+// ── 云养宠 ──
+export const cloudAdoptionApi = {
+  list: (params: Record<string, unknown> = {}) =>
+    api.get("/cloud", { params }),
+  adopt: (petId: number) => api.post("/cloud", { pet_id: petId }),
 };
 
-// ─── 捐赠 API ───
+// ── 捐赠 ──
 export const donationApi = {
-  list: (params?: Record<string, any>) => api.get("/donations", { params }),
-  myDonations: (params?: Record<string, any>) => api.get("/donations/my", { params }),
-  create: (data: Record<string, any>) => api.post("/donations", data),
-  verify: (id: number) => api.put(`/donations/${id}/verify`),
+  create: (data: object) => api.post("/donations", data),
+  list: (params: Record<string, unknown> = {}) =>
+    api.get("/donations", { params }),
+  update: (id: number, data: { is_verified?: boolean }) =>
+    api.put(`/donations/${id}`, data),
 };
 
-// ─── 活动 API ───
+// ── 志愿活动 ──
 export const activityApi = {
-  list: (params?: Record<string, any>) => api.get("/activities", { params }),
-  detail: (id: number) => api.get(`/activities/${id}`),
-  create: (data: Record<string, any>) => api.post("/activities", data),
-  update: (id: number, data: Record<string, any>) => api.put(`/activities/${id}`, data),
-  enroll: (activityId: number, data: { activity_id: number; note: string }) =>
-    api.post(`/activities/${activityId}/enroll`, data),
-  checkin: (activityId: number) => api.post(`/activities/${activityId}/checkin`),
-  enrollments: (activityId: number) => api.get(`/activities/${activityId}/enrollments`),
+  list: (params: { page?: number; page_size?: number; status?: string; keyword?: string } = {}) =>
+    api.get("/activities", { params }),
+  get: (id: number) => api.get(`/activities/${id}`),
+  // 管理端
+  manageList: (params: { page?: number; page_size?: number; status?: string; keyword?: string } = {}) =>
+    api.get("/activities/manage/list", { params }),
+  manageGet: (id: number) => api.get(`/activities/manage/${id}`),
+  getEnrollments: (id: number) => api.get(`/activities/manage/${id}/enrollments`),
+  create: (data: { title: string; description: string; cover_image?: string; location: string; start_time: string; end_time: string; max_participants: number }) =>
+    api.post("/activities", data),
+  update: (id: number, data: object) => api.put(`/activities/${id}`, data),
+  updateStatus: (id: number, status: string) =>
+    api.put(`/activities/${id}/status`, null, { params: { status_value: status } }),
+  delete: (id: number) => api.delete(`/activities/${id}`),
+  // 志愿者
+  enroll: (activityId: number, note?: string) =>
+    api.post(`/activities/${activityId}/enroll`, null, { params: { note: note || "" } }),
+  checkIn: (activityId: number) =>
+    api.post(`/activities/${activityId}/checkin`),
 };
 
-export default api;
+// ── 文件上传 ──
+export const uploadApi = {
+  upload: (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return api.post("/upload", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  },
+};
+
+// ── 操作日志 ──
+export const operationLogApi = {
+  list: (params: { page?: number; page_size?: number; target_type?: string; action?: string } = {}) =>
+    api.get("/operations", { params }),
+};

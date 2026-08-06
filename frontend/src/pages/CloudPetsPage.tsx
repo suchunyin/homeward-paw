@@ -1,82 +1,65 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { cloudApi } from "../api";
+import { Link, useNavigate } from "react-router-dom";
+import { cloudAdoptionApi } from "../api";
+import { useAuthStore } from "../stores/authStore";
+
+interface CloudPet {
+  id: number;
+  pet_id: number;
+  pet_name: string;
+  pet_image?: string;
+  adopter_name: string;
+  created_at: string;
+}
 
 export default function CloudPetsPage() {
-  const [cloudPets, setCloudPets] = useState<any[]>([]);
+  const navigate = useNavigate();
+  const token = useAuthStore((s) => s.token);
+  const [pets, setPets] = useState<CloudPet[]>([]);
   const [loading, setLoading] = useState(true);
-  const token = localStorage.getItem("token");
 
   useEffect(() => {
-    if (!token) return;
-    cloudApi
-      .myCloudPets()
-      .then((res) => setCloudPets(res.data.items))
+    if (!token) {
+      navigate("/login", { replace: true });
+      return;
+    }
+    cloudAdoptionApi.list()
+      .then((res) => setPets(res.data))
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
-  const handleCancel = async (cloudId: number) => {
-    if (!confirm("确定取消云养此宠物吗？")) return;
-    await cloudApi.cancel(cloudId);
-    setCloudPets((prev) => prev.filter((c) => c.id !== cloudId));
-  };
-
-  if (!token) {
-    return (
-      <div className="empty-text">
-        <p>请先登录查看云养宠</p>
-        <Link to="/login" className="btn btn-primary" style={{ marginTop: 16, display: "inline-flex" }}>
-          去登录
-        </Link>
-      </div>
-    );
-  }
-
-  if (loading) return <div className="loading-text">加载中...</div>;
+  if (!token) return null;
 
   return (
     <div>
-      <div className="hero" style={{ padding: "32px 0 24px" }}>
-        <h1>我的云养宠</h1>
-        <p>每一份云养，都是对毛孩子的温暖守护</p>
-      </div>
-
-      {cloudPets.length === 0 ? (
-        <div className="empty-text">
-          <p>还没有云养任何宠物</p>
-          <Link to="/" className="btn btn-primary" style={{ marginTop: 16, display: "inline-flex" }}>
-            去看看待领养宠物
-          </Link>
-        </div>
+      <h2 className="text-[24px] mb-6">云养宠</h2>
+      {loading ? (
+        <p className="text-center py-[60px] text-[#78716c] text-[15px]">加载中...</p>
+      ) : pets.length === 0 ? (
+        <p className="text-center py-[60px] text-[#78716c] text-[15px]">
+          暂未云养任何宠物，去首页看看喜欢的宠物吧！
+        </p>
       ) : (
-        <div className="pet-grid">
-          {cloudPets.map((c) => (
-            <div key={c.id} className="pet-card" style={{ display: "block" }}>
-              <div className="pet-card-img">
-                <div className="img-placeholder">🐾</div>
-              </div>
-              <div className="pet-card-info">
-                <h3>宠物 #{c.pet_id}</h3>
-                <p className="pet-meta">
-                  每月赞助: <strong style={{ color: "#d97706" }}>¥{c.monthly_amount}</strong>
-                </p>
-                {c.message && (
-                  <p className="pet-meta" style={{ marginTop: 4 }}>
-                    💌 "{c.message}"
-                  </p>
+        <div className="grid gap-5 [grid-template-columns:repeat(auto-fill,minmax(260px,1fr))]">
+          {pets.map((p) => (
+            <Link
+              key={p.id}
+              to={`/pet/${p.pet_id}`}
+              className="bg-white rounded-[12px] overflow-hidden no-underline text-[#292524] shadow-[0_1px_3px_rgba(0,0,0,0.08)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_8px_25px_rgba(0,0,0,0.1)]"
+            >
+              <div className="h-[200px] overflow-hidden bg-[#fef3c7]">
+                {p.pet_image ? (
+                  <img src={p.pet_image} alt={p.pet_name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-[64px]">🐾</div>
                 )}
-                <p className="pet-location">
-                  开始于 {new Date(c.created_at).toLocaleDateString()}
-                </p>
-                <button
-                  className="btn btn-danger btn-sm"
-                  style={{ marginTop: 12 }}
-                  onClick={() => handleCancel(c.id)}
-                >
-                  取消云养
-                </button>
               </div>
-            </div>
+              <div className="p-4">
+                <h3 className="text-[17px] mb-1">{p.pet_name}</h3>
+                <p className="text-[13px] text-[#78716c]">云养人：{p.adopter_name}</p>
+              </div>
+            </Link>
           ))}
         </div>
       )}
