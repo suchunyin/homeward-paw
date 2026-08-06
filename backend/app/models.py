@@ -17,7 +17,6 @@ from sqlalchemy.orm import relationship
 
 from app.database import Base
 
-
 # ═══════════════════════════════════════════
 # 枚举
 # ═══════════════════════════════════════════
