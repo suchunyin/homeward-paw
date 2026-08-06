@@ -304,3 +304,21 @@ class ActivityEnrollment(Base):
 
     activity = relationship("Activity")
     user = relationship("User")
+
+
+class OperationLog(Base):
+    """操作日志"""
+
+    __tablename__ = "operation_logs"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    user_name = Column(String(50), nullable=False)
+    action = Column(String(20), nullable=False)  # create / update / delete
+    target_type = Column(String(30), nullable=False)  # knowledge / activity
+    target_id = Column(Integer, nullable=False)
+    target_title = Column(String(200), nullable=False, default="")
+    details = Column(Text, nullable=True)  # JSON 格式的变更详情
+    created_at = Column(DateTime, server_default=func.now())
+
+    user = relationship("User", backref="operation_logs")

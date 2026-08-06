@@ -8,14 +8,17 @@ from pydantic import BaseModel, EmailStr, Field
 
 
 class UserRegister(BaseModel):
+    """注册：仅需用户名、邮箱、密码，身份默认为普通用户"""
+
     username: str = Field(..., min_length=2, max_length=50)
     email: EmailStr
     password: str = Field(..., min_length=6, max_length=50)
-    role: str = "adopter"  # adopter / shelter / volunteer
 
 
 class UserLogin(BaseModel):
-    username: str
+    """登录：支持用户名或邮箱 + 密码"""
+
+    account: str = Field(..., min_length=1, max_length=100)
     password: str
 
 
@@ -24,9 +27,9 @@ class UserOut(BaseModel):
     username: str
     email: str
     role: str
-    phone: str
-    avatar: str
-    is_active: bool
+    phone: str | None = None
+    avatar: str | None = None
+    is_active: bool = True
     created_at: datetime
 
     class Config:
@@ -400,3 +403,132 @@ class EnrollmentOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# ═══════════════════════════════════════════
+# 角色权限管理
+# ═══════════════════════════════════════════
+
+
+class RoleInfo(BaseModel):
+    value: str
+    label: str
+    description: str
+
+
+class UserUpdateRole(BaseModel):
+    role: str  # adopter / admin / shelter / volunteer
+
+
+class UserListItem(BaseModel):
+    id: int
+    username: str
+    email: str
+    phone: str
+    role: str
+    is_active: bool
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class UserListOut(BaseModel):
+    users: list[UserListItem]
+    total: int
+
+
+# ═══════════════════════════════════════════
+# 操作日志
+# ═══════════════════════════════════════════
+
+
+class OpLogOut(BaseModel):
+    id: int
+    user_id: int
+    user_name: str
+    action: str
+    target_type: str
+    target_id: int
+    target_title: str
+    details: str | None = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class OpLogListOut(BaseModel):
+    items: list[OpLogOut]
+    total: int
+    page: int
+    page_size: int
+
+
+# ═══════════════════════════════════════════
+# 管理端知识文章（含发布状态、作者名）
+# ═══════════════════════════════════════════
+
+
+class KnowledgeManageOut(BaseModel):
+    id: int
+    title: str
+    category: str
+    summary: str
+    cover_image: str
+    author_id: int
+    author_name: str = ""
+    is_published: bool
+    view_count: int
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class KnowledgeManageListOut(BaseModel):
+    items: list[KnowledgeManageOut]
+    total: int
+    page: int
+    page_size: int
+
+
+# ═══════════════════════════════════════════
+# 管理端活动（含报名用户详情）
+# ═══════════════════════════════════════════
+
+
+class ActivityEnrollmentDetailOut(BaseModel):
+    id: int
+    user_id: int
+    user_name: str = ""
+    user_email: str = ""
+    is_checked_in: bool
+    checked_in_at: datetime | None = None
+    note: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class ActivityManageOut(ActivityOut):
+    enrollments: list[ActivityEnrollmentDetailOut] = []
+
+
+class ActivityManageListOut(BaseModel):
+    items: list[ActivityManageOut]
+    total: int
+    page: int
+    page_size: int
+
+
+# ═══════════════════════════════════════════
+# 文件上传
+# ═══════════════════════════════════════════
+
+
+class UploadOut(BaseModel):
+    url: str
+    filename: str

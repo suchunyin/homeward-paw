@@ -1,26 +1,25 @@
 from datetime import datetime, timedelta, timezone
 
+import bcrypt
+import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from jose import JWTError, jwt
-from passlib.context import CryptContext
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.database import get_db
-from app.models import User
+from app.models import User, UserRole
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security = HTTPBearer()
 
 
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
+    return bcrypt.checkpw(plain.encode(), hashed.encode())
 
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
@@ -37,22 +36,58 @@ async def get_current_user(
     db: AsyncSession = Depends(get_db),
 ) -> User:
     """从 JWT token 中解析当前用户"""
-    token = credentials.credentials
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="无法验证凭据",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-        user_id: int = payload.get("sub")
-        if user_id is None:
+        payload = jwt.decode(credentials.credentials, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        user_id_raw = payload.get("sub")
+        if user_id_raw is None:
             raise credentials_exception
-    except JWTError:
+        user_id = int(user_id_raw)
+    except (jwt.PyJWTError, ValueError, TypeError) as e:
+        print(f"[AUTH] JWT 解码失败: {e}")
         raise credentials_exception
 
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
     if user is None:
+        print(f"[AUTH] 用户不存在: id={user_id}")
         raise credentials_exception
+
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="账号已被禁用",
+        )
+
     return user
+
+
+def require_admin(current_user: User = Depends(get_current_user)) -> User:
+    """要求当前用户为超级管理员"""
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="权限不足，仅超级管理员可执行此操作",
+        )
+    return current_user
+
+
+def require_roles(roles: list[str]):
+    """要求当前用户拥有指定角色之一"""
+
+    async def dependency(current_user: User = Depends(get_current_user)) -> User:
+        # UserRole 继承自 str，用 set 比较兼容枚举和纯字符串两种返回情况
+        allowed = {UserRole(r) for r in roles}
+        if current_user.role not in allowed:
+            role_names = ", ".join(roles)
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"权限不足，需要以下角色之一: {role_names}",
+            )
+        return current_user
+
+    return dependency
