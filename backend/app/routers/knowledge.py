@@ -1,4 +1,4 @@
-"""救助知识文章相关路由"""
+"""宠物知识文章相关路由"""
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import desc, func, or_, select
@@ -17,7 +17,7 @@ from app.schemas import (
     KnowledgeUpdate,
 )
 
-router = APIRouter(prefix="/api/knowledge", tags=["救助知识"])
+router = APIRouter(prefix="/api/knowledge", tags=["宠物知识"])
 
 CATEGORY_LABELS = {
     "care": "宠物护理",

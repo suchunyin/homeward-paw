@@ -78,7 +78,7 @@ async def list_roles(current_user: User = Depends(get_current_user)):
     roles = [
         RoleInfo(value="adopter", label="普通用户", description="浏览宠物信息、申请领养、捐赠等基础功能"),
         RoleInfo(value="volunteer", label="志愿者/义工", description="参与救助活动、协助救助站日常工作"),
-        RoleInfo(value="shelter", label="救助站", description="发布宠物信息、管理领养申请、发布救助知识"),
+        RoleInfo(value="shelter", label="救助站", description="发布宠物信息、管理领养申请、发布宠物知识"),
         RoleInfo(value="admin", label="超级管理员", description="管理所有用户、分配角色权限、系统全局管理"),
     ]
     return roles

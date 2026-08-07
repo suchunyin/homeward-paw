@@ -67,14 +67,18 @@ class PetCreate(BaseModel):
 
 class PetUpdate(BaseModel):
     name: str | None = None
+    species: str | None = None
     breed: str | None = None
     age: int | None = None
     gender: str | None = None
     size: str | None = None
+    color: str | None = None
     description: str | None = None
     health_status: str | None = None
     is_vaccinated: bool | None = None
     is_neutered: bool | None = None
+    city: str | None = None
+    district: str | None = None
     status: str | None = None
     cover_image: str | None = None
     images: str | None = None
@@ -112,6 +116,17 @@ class PetListOut(BaseModel):
     page_size: int
 
 
+class PetManageOut(PetOut):
+    owner_name: str = ""
+
+
+class PetManageListOut(BaseModel):
+    items: list[PetManageOut]
+    total: int
+    page: int
+    page_size: int
+
+
 # ═══════════════════════════════════════════
 # 领养申请
 # ═══════════════════════════════════════════
@@ -119,7 +134,17 @@ class PetListOut(BaseModel):
 
 class AdoptionCreate(BaseModel):
     pet_id: int
-    message: str = ""
+    real_name: str = Field(..., min_length=1, max_length=50)
+    phone: str = Field(..., min_length=1, max_length=20)
+    housing_type: str = Field(..., min_length=1, max_length=20)
+    has_sealed_window: bool = False
+    family_agree: bool = False
+    family_allergy: bool = False
+    pet_experience: str = Field(..., min_length=1, max_length=20)
+    reason: str = Field(..., min_length=1)
+    agree_terms: bool = False
+    agree_follow_up: bool = False
+    message: str = ""  # 补充说明
 
 
 class AdoptionUpdate(BaseModel):
@@ -134,6 +159,16 @@ class AdoptionOut(BaseModel):
     status: str
     message: str
     reply: str
+    real_name: str = ""
+    phone: str = ""
+    housing_type: str = ""
+    has_sealed_window: bool = False
+    family_agree: bool = False
+    family_allergy: bool = False
+    pet_experience: str = ""
+    reason: str = ""
+    agree_terms: bool = False
+    agree_follow_up: bool = False
     created_at: datetime
     updated_at: datetime
 
@@ -141,8 +176,23 @@ class AdoptionOut(BaseModel):
         from_attributes = True
 
 
+class AdoptionWithPetOut(AdoptionOut):
+    """带宠物信息和申请人信息的领养申请"""
+    pet_name: str = ""
+    pet_breed: str = ""
+    pet_cover_image: str = ""
+    applicant_name: str = ""
+    applicant_phone: str = ""
+
+
+class AdoptionCheckOut(BaseModel):
+    """检查用户是否已申请某宠物"""
+    has_applied: bool
+    application: AdoptionOut | None = None
+
+
 # ═══════════════════════════════════════════
-# 救助知识文章
+# 宠物知识文章
 # ═══════════════════════════════════════════
 
 

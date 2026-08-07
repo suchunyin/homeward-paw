@@ -279,7 +279,7 @@ async def create_activity(
 ):
     """创建活动"""
     # 自动设置初始状态
-    now = dt.datetime.utcnow()
+    now = dt.datetime.now(dt.timezone.utc)
     if data.start_time <= now:
         initial_status = "ongoing"
     else:
@@ -481,7 +481,7 @@ async def checkin_activity(
         raise HTTPException(status_code=400, detail="您已签到")
 
     enrollment.is_checked_in = True
-    enrollment.checked_in_at = dt.datetime.utcnow()
+    enrollment.checked_in_at = dt.datetime.now(dt.timezone.utc)
     db.add(enrollment)
     await db.commit()
     await db.refresh(enrollment)

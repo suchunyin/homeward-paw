@@ -122,8 +122,20 @@ class Adoption(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     pet_id = Column(Integer, ForeignKey("pets.id"), nullable=False)
     status = Column(Enum(AdoptionStatus), default=AdoptionStatus.PENDING)
-    message = Column(Text, default="")  # 申请留言
+    message = Column(Text, default="")  # 补充说明
     reply = Column(Text, default="")  # 救助站回复
+
+    # P0 领养申请表字段
+    real_name = Column(String(50), default="")  # 真实姓名
+    phone = Column(String(20), default="")  # 手机号
+    housing_type = Column(String(20), default="")  # 住房类型
+    has_sealed_window = Column(Boolean, default=False)  # 是否封窗
+    family_agree = Column(Boolean, default=False)  # 家人同意
+    family_allergy = Column(Boolean, default=False)  # 家人过敏
+    pet_experience = Column(String(20), default="")  # 养宠经验
+    reason = Column(Text, default="")  # 领养原因
+    agree_terms = Column(Boolean, default=False)  # 同意协议
+    agree_follow_up = Column(Boolean, default=False)  # 同意回访
 
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
@@ -163,7 +175,7 @@ class ActivityStatus(str, enum.Enum):
 
 
 class KnowledgeArticle(Base):
-    """救助知识文章"""
+    """宠物知识文章"""
 
     __tablename__ = "knowledge_articles"
 
