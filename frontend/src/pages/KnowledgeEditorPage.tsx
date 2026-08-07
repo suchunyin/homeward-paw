@@ -2,6 +2,19 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
+import ImageUploader from "../components/ImageUploader";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { Textarea } from "../components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
+import { Card, CardContent } from "../components/ui/card";
 
 import { knowledgeApi, uploadApi } from "../api";
 import { useAuthStore } from "../stores/authStore";
@@ -131,7 +144,7 @@ export default function KnowledgeEditorPage() {
 
   return (
     <div className="max-w-[800px] mx-auto">
-      <h1 className="text-[24px] mb-6">{isEdit ? "编辑文章" : "写文章"}</h1>
+      <h1 className="text-[24px] mb-6 font-semibold">{isEdit ? "编辑文章" : "写文章"}</h1>
 
       {error && (
         <div className="bg-[#fef2f2] text-[#ef4444] px-4 py-2.5 rounded-[8px] mb-4 text-[14px]">
@@ -139,73 +152,75 @@ export default function KnowledgeEditorPage() {
         </div>
       )}
 
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-8 rounded-[12px] border border-[#e7e5e4]"
-      >
-        <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
-          <input
-            className="block w-full px-3.5 py-2.5 border border-[#e7e5e4] rounded-[8px] text-[15px] outline-none transition-colors duration-200 focus:border-[#f59e0b]"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="文章标题"
-            maxLength={100}
-          />
-          <select
-            className="block w-full px-3.5 py-2.5 border border-[#e7e5e4] rounded-[8px] text-[15px] outline-none transition-colors duration-200 focus:border-[#f59e0b] bg-white"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-          >
-            {CATEGORIES.map((c) => (
-              <option key={c.value} value={c.value}>{c.label}</option>
-            ))}
-          </select>
-        </div>
+      <form onSubmit={handleSubmit}>
+        <Card>
+          <CardContent className="p-8 space-y-4">
+            <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
+              <div className="space-y-2">
+                <Label htmlFor="title">文章标题</Label>
+                <Input
+                  id="title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="文章标题"
+                  maxLength={100}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="category">分类</Label>
+                <Select value={category} onValueChange={setCategory}>
+                  <SelectTrigger id="category" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CATEGORIES.map((c) => (
+                      <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
 
-        <input
-          className="block w-full mt-4 px-3.5 py-2.5 border border-[#e7e5e4] rounded-[8px] text-[15px] outline-none transition-colors duration-200 focus:border-[#f59e0b]"
-          value={coverImage}
-          onChange={(e) => setCoverImage(e.target.value)}
-          placeholder="封面图片链接（选填）"
-        />
+            <ImageUploader value={coverImage} onChange={setCoverImage} />
 
-        <textarea
-          className="block w-full mt-4 px-3.5 py-2.5 border border-[#e7e5e4] rounded-[8px] text-[15px] outline-none transition-colors duration-200 focus:border-[#f59e0b] resize-y"
-          value={summary}
-          onChange={(e) => setSummary(e.target.value)}
-          placeholder="文章摘要（选填）"
-          rows={2}
-          maxLength={200}
-        />
+            <div className="space-y-2">
+              <Label htmlFor="summary">文章摘要（选填）</Label>
+              <Textarea
+                id="summary"
+                value={summary}
+                onChange={(e) => setSummary(e.target.value)}
+                placeholder="文章摘要（选填）"
+                rows={2}
+                maxLength={200}
+              />
+            </div>
 
-        <div className="mt-4">
-          <ReactQuill
-            ref={quillRef}
-            value={content}
-            onChange={(val: string) => setContent(val)}
-            modules={QUILL_MODULES}
-            formats={QUILL_FORMATS}
-            placeholder="开始撰写文章内容..."
-            style={{ height: "400px", marginBottom: "50px" }}
-          />
-        </div>
+            <div className="pt-2">
+              <ReactQuill
+                ref={quillRef}
+                value={content}
+                onChange={(val: string) => setContent(val)}
+                modules={QUILL_MODULES}
+                formats={QUILL_FORMATS}
+                placeholder="开始撰写文章内容..."
+                style={{ height: "400px", marginBottom: "50px" }}
+              />
+            </div>
 
-        <div className="flex justify-end gap-3 mt-2">
-          <button
-            type="button"
-            onClick={() => navigate("/admin/knowledge")}
-            className="px-4 py-2 border border-[#e7e5e4] bg-white rounded-[8px] text-[14px] cursor-pointer hover:bg-[#fafaf9]"
-          >
-            取消
-          </button>
-          <button
-            type="submit"
-            disabled={saving}
-            className="inline-flex items-center justify-center px-6 py-2.5 border-none rounded-[8px] text-[14px] font-semibold cursor-pointer transition-all duration-200 no-underline bg-[#f59e0b] text-white hover:bg-[#d97706] disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {saving ? "保存中..." : "保存为草稿"}
-          </button>
-        </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => navigate("/admin/knowledge")}
+              >
+                取消
+              </Button>
+              <Button type="submit" disabled={saving} className="bg-amber-500 hover:bg-amber-600 text-white">
+                {saving ? "保存中..." : "保存"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </form>
     </div>
   );

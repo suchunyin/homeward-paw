@@ -1,6 +1,15 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { petApi } from "../api";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
 
 interface Pet {
   id: number;
@@ -16,7 +25,7 @@ interface Pet {
   status: string;
 }
 
-const SPECIES_OPTIONS = ["", "狗", "猫", "其他"];
+const PAGE_SIZE = 12;
 
 export default function HomePage() {
   const [pets, setPets] = useState<Pet[]>([]);
@@ -29,7 +38,7 @@ export default function HomePage() {
   const fetchPets = async () => {
     setLoading(true);
     try {
-      const params: Record<string, any> = { page, page_size: 12 };
+      const params: Record<string, any> = { page, page_size: PAGE_SIZE };
       if (species) params.species = species;
       if (keyword) params.keyword = keyword;
       const res = await petApi.list(params);
@@ -58,31 +67,27 @@ export default function HomePage() {
         <h1 className="text-[36px] text-[#292524] mb-2">找到你的毛孩子</h1>
         <p className="text-[#78716c] mb-8">领养代替购买，给流浪动物一个温暖的家</p>
         <div className="flex gap-3 max-w-[600px] mx-auto max-sm:flex-col">
-          <input
-            type="text"
+          <Input
             placeholder="搜索宠物名称..."
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-            className="flex-1 px-4 py-3 border-2 border-[#e7e5e4] rounded-[12px] text-[15px] outline-none transition-colors duration-200 focus:border-[#f59e0b]"
+            className="flex-1 min-w-0 h-[48px] text-[15px]"
           />
-          <select
-            value={species}
-            onChange={(e) => setSpecies(e.target.value)}
-            className="px-3 py-3 border-2 border-[#e7e5e4] rounded-[12px] text-[15px] outline-none bg-white"
-          >
-            {SPECIES_OPTIONS.map((s) => (
-              <option key={s} value={s}>
-                {s || "全部物种"}
-              </option>
-            ))}
-          </select>
-          <button
-            onClick={handleSearch}
-            className="inline-flex items-center justify-center px-8 py-3 border-none rounded-[8px] text-[14px] font-semibold cursor-pointer transition-all duration-200 no-underline bg-[#f59e0b] text-white hover:bg-[#d97706]"
-          >
+          <Select value={species} onValueChange={setSpecies}>
+            <SelectTrigger className="h-[48px] min-w-[130px] w-auto">
+              <SelectValue placeholder="全部" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">全部</SelectItem>
+              <SelectItem value="猫">猫</SelectItem>
+              <SelectItem value="狗">狗</SelectItem>
+              <SelectItem value="其他">其他</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button onClick={handleSearch} className="bg-amber-500 hover:bg-amber-600 text-white h-[48px] px-8 text-[14px]">
             搜索
-          </button>
+          </Button>
         </div>
       </section>
 
@@ -101,7 +106,7 @@ export default function HomePage() {
                 <Link
                   to={`/pet/${pet.id}`}
                   key={pet.id}
-                  className="bg-white rounded-[12px] overflow-hidden no-underline text-[#292524] shadow-[0_1px_3px_rgba(0,0,0,0.08)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_8px_25px_rgba(0,0,0,0.1)]"
+                  className="block bg-white rounded-[12px] overflow-hidden no-underline text-[#292524] shadow-[0_1px_3px_rgba(0,0,0,0.08)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_8px_25px_rgba(0,0,0,0.1)]"
                 >
                   <div className="h-[200px] overflow-hidden bg-[#fef3c7]">
                     {pet.cover_image ? (
@@ -123,26 +128,27 @@ export default function HomePage() {
               ))}
             </div>
 
-            {/* 分页 */}
-            {total > 12 && (
+            {total > PAGE_SIZE && (
               <div className="flex items-center justify-center gap-4 mt-8">
-                <button
+                <Button
+                  variant="outline"
                   disabled={page <= 1}
                   onClick={() => setPage((p) => p - 1)}
-                  className="px-5 py-2 border border-[#e7e5e4] bg-white rounded-[8px] cursor-pointer text-[14px] disabled:opacity-40 disabled:cursor-not-allowed"
+                  size="sm"
                 >
                   上一页
-                </button>
+                </Button>
                 <span className="text-[14px] text-[#78716c]">
-                  第 {page} / {Math.ceil(total / 12)} 页
+                  第 {page} / {Math.ceil(total / PAGE_SIZE)} 页
                 </span>
-                <button
-                  disabled={page >= Math.ceil(total / 12)}
+                <Button
+                  variant="outline"
+                  disabled={page >= Math.ceil(total / PAGE_SIZE)}
                   onClick={() => setPage((p) => p + 1)}
-                  className="px-5 py-2 border border-[#e7e5e4] bg-white rounded-[8px] cursor-pointer text-[14px] disabled:opacity-40 disabled:cursor-not-allowed"
+                  size="sm"
                 >
                   下一页
-                </button>
+                </Button>
               </div>
             )}
           </>

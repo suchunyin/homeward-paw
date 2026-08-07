@@ -2,11 +2,27 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { activityApi } from "../api";
 import { useAuthStore } from "../stores/authStore";
+import { Button } from "../components/ui/button";
+import { Badge } from "../components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../components/ui/table";
 
 const STATUS_MAP: Record<string, string> = {
   upcoming: "招募中",
   ongoing: "进行中",
   completed: "已结束",
+};
+
+const STATUS_BADGE_MAP: Record<string, "warning" | "success" | "secondary"> = {
+  upcoming: "warning",
+  ongoing: "success",
+  completed: "secondary",
 };
 
 interface Enrollment {
@@ -57,7 +73,6 @@ export default function ActivityDetailPage() {
       .catch(() => navigate("/", { replace: true }))
       .finally(() => setLoading(false));
 
-    // 如果是组织者，加载报名列表
     if (isOrganizer && token) {
       activityApi
         .getEnrollments(Number(id))
@@ -90,30 +105,22 @@ export default function ActivityDetailPage() {
 
   const isFull = activity.enrolled_count >= activity.max_participants;
 
-  const statusTagClass =
-    activity.status === "upcoming"
-      ? "bg-[#fef3c7] text-[#d97706]"
-      : activity.status === "ongoing"
-      ? "bg-[#dcfce7] text-[#16a34a]"
-      : "bg-[#e2e8f0] text-[#64748b]";
-
   return (
     <div className="max-w-[800px] mx-auto">
-      <button
-        onClick={() => navigate(-1)}
-        className="bg-none border-none text-[#78716c] cursor-pointer text-[14px] hover:text-[#ef4444]"
-      >
+      <Button variant="ghost" onClick={() => navigate(-1)} className="text-[#78716c] hover:text-[#ef4444]">
         ← 返回
-      </button>
+      </Button>
 
-      <h1 className="text-[28px] mt-2 mb-2">{activity.title}</h1>
+      <h1 className="text-[28px] mt-2 mb-2 font-semibold">{activity.title}</h1>
 
-      <span className={`inline-block px-3 py-1 rounded-[20px] text-[13px] font-semibold ${statusTagClass}`}>
+      <Badge variant={STATUS_BADGE_MAP[activity.status] || "secondary"} className="text-[13px]">
         {STATUS_MAP[activity.status] || activity.status}
-      </span>
+      </Badge>
 
       {message && (
-        <div className="bg-[#f0fdf4] text-[#16a34a] px-4 py-2.5 rounded-[8px] mt-4 text-[14px]">
+        <div className={`px-4 py-2.5 rounded-[8px] mt-4 text-[14px] ${
+          message.includes("成功") ? "bg-[#f0fdf4] text-[#16a34a]" : "bg-[#fef2f2] text-[#ef4444]"
+        }`}>
           {message}
         </div>
       )}
@@ -132,80 +139,63 @@ export default function ActivityDetailPage() {
         <p>👥 {activity.enrolled_count} / {activity.max_participants} 人报名</p>
       </div>
 
-      <div
-        className="article-content my-5"
-        style={{ whiteSpace: "pre-wrap", lineHeight: 1.8 }}
-      >
+      <div className="my-5 whitespace-pre-wrap leading-[1.8]">
         {activity.description || "暂无详情描述"}
       </div>
 
       <div className="mt-4">
         {isVolunteer && activity.status === "upcoming" && !isFull && (
-          <button
-            onClick={handleEnroll}
-            disabled={enrolling}
-            className="inline-flex items-center justify-center px-6 py-2.5 border-none rounded-[8px] text-[14px] font-semibold cursor-pointer transition-all duration-200 no-underline bg-[#f59e0b] text-white hover:bg-[#d97706] disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+          <Button onClick={handleEnroll} disabled={enrolling}>
             {enrolling ? "报名中..." : "立即报名"}
-          </button>
+          </Button>
         )}
         {isVolunteer && isFull && (
-          <span className="inline-block px-3 py-1 rounded-[20px] text-[13px] font-semibold bg-[#e2e8f0] text-[#64748b]">
-            报名已满
-          </span>
+          <Badge variant="secondary">报名已满</Badge>
         )}
         {!token && activity.status === "upcoming" && (
-          <button
-            onClick={() => navigate("/login")}
-            className="inline-flex items-center justify-center px-6 py-2.5 border-none rounded-[8px] text-[14px] font-semibold cursor-pointer transition-all duration-200 no-underline bg-[#f59e0b] text-white hover:bg-[#d97706]"
-          >
+          <Button onClick={() => navigate("/login")}>
             登录后报名
-          </button>
+          </Button>
         )}
         {activity.status === "completed" && (
-          <span className="inline-block px-3 py-1 rounded-[20px] text-[13px] font-semibold bg-[#e2e8f0] text-[#64748b]">
-            活动已结束
-          </span>
+          <Badge variant="secondary">活动已结束</Badge>
         )}
         {!isVolunteer && !isOrganizer && token && activity.status !== "completed" && (
-          <span className="inline-block px-3 py-1 rounded-[20px] text-[13px] font-semibold bg-[#f1f5f9] text-[#64748b]">
-            仅志愿者可报名
-          </span>
+          <Badge variant="secondary">仅志愿者可报名</Badge>
         )}
       </div>
 
-      {/* 组织者查看报名列表 */}
       {isOrganizer && enrollments.length > 0 && (
         <div className="mt-8">
-          <h3 className="text-[16px] mb-2">报名人员（{enrollments.length}人）</h3>
-          <table className="w-full border-collapse bg-white rounded-[12px] overflow-hidden border border-[#e7e5e4] text-[14px]">
-            <thead>
-              <tr className="bg-[#fafaf9] text-left">
-                <th className="px-4 py-2.5 border-b border-[#e7e5e4] text-[#78716c]">用户名</th>
-                <th className="px-4 py-2.5 border-b border-[#e7e5e4] text-[#78716c]">邮箱</th>
-                <th className="px-4 py-2.5 border-b border-[#e7e5e4] text-[#78716c]">备注</th>
-                <th className="px-4 py-2.5 border-b border-[#e7e5e4] text-[#78716c]">签到</th>
-                <th className="px-4 py-2.5 border-b border-[#e7e5e4] text-[#78716c]">报名时间</th>
-              </tr>
-            </thead>
-            <tbody>
-              {enrollments.map((e) => (
-                <tr key={e.id} className="border-b border-[#f5f5f4] last:border-b-0">
-                  <td className="px-4 py-2.5">{e.user_name}</td>
-                  <td className="px-4 py-2.5">{e.user_email}</td>
-                  <td className="px-4 py-2.5">{e.note || "-"}</td>
-                  <td className="px-4 py-2.5">
-                    {e.is_checked_in ? (
-                      <span className="inline-block px-2.5 py-0.5 rounded-[6px] text-[13px] bg-[#dcfce7] text-[#166534]">已签到</span>
-                    ) : (
-                      <span className="inline-block px-2.5 py-0.5 rounded-[6px] text-[13px] bg-[#f1f5f9] text-[#64748b]">未签到</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-2.5">{new Date(e.created_at).toLocaleString("zh-CN")}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <h3 className="text-[16px] mb-2 font-medium">报名人员（{enrollments.length}人）</h3>
+          <div className="rounded-[12px] border overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>用户名</TableHead>
+                  <TableHead>邮箱</TableHead>
+                  <TableHead>备注</TableHead>
+                  <TableHead>签到</TableHead>
+                  <TableHead>报名时间</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {enrollments.map((e) => (
+                  <TableRow key={e.id}>
+                    <TableCell className="font-medium">{e.user_name}</TableCell>
+                    <TableCell>{e.user_email}</TableCell>
+                    <TableCell>{e.note || "-"}</TableCell>
+                    <TableCell>
+                      <Badge variant={e.is_checked_in ? "success" : "secondary"}>
+                        {e.is_checked_in ? "已签到" : "未签到"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{new Date(e.created_at).toLocaleString("zh-CN")}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       )}
     </div>

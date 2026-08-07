@@ -2,6 +2,24 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { knowledgeApi } from "../api";
 import { useAuthStore } from "../stores/authStore";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Badge } from "../components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../components/ui/table";
 
 const CATEGORY_MAP: Record<string, string> = {
   care: "宠物护理",
@@ -97,137 +115,134 @@ export default function AdminKnowledgePage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-[24px]">知识文章管理</h1>
-        <button
-          onClick={() => navigate("/admin/knowledge/new")}
-          className="inline-flex items-center justify-center px-6 py-2.5 border-none rounded-[8px] text-[14px] font-semibold cursor-pointer transition-all duration-200 no-underline bg-[#f59e0b] text-white hover:bg-[#d97706]"
-        >
-          写文章
-        </button>
+        <h1 className="text-[24px] font-semibold">知识文章管理</h1>
+        <Button onClick={() => navigate("/admin/knowledge/new")} className="bg-amber-500 hover:bg-amber-600 text-white">写文章</Button>
       </div>
 
       <div className="flex flex-wrap gap-3 mb-4">
-        <select
-          value={category}
-          onChange={(e) => { setCategory(e.target.value); setPage(1); }}
-          className="px-3 py-2 border border-[#e7e5e4] rounded-[8px] text-[14px] outline-none bg-white"
-        >
-          <option value="">全部分类</option>
-          {Object.entries(CATEGORY_MAP).map(([k, v]) => (
-            <option key={k} value={k}>{v}</option>
-          ))}
-        </select>
-        <select
-          value={statusFilter}
-          onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-          className="px-3 py-2 border border-[#e7e5e4] rounded-[8px] text-[14px] outline-none bg-white"
-        >
-          <option value="">全部状态</option>
-          <option value="published">已发布</option>
-          <option value="draft">草稿</option>
-        </select>
-        <input
-          className="flex-1 min-w-[200px] px-3 py-2 border border-[#e7e5e4] rounded-[8px] text-[14px] outline-none focus:border-[#f59e0b]"
+        <Select value={category} onValueChange={(v) => { setCategory(v); setPage(1); }}>
+          <SelectTrigger className="w-[130px] h-9 text-[14px]">
+            <SelectValue placeholder="全部分类" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">全部分类</SelectItem>
+            {Object.entries(CATEGORY_MAP).map(([k, v]) => (
+              <SelectItem key={k} value={k}>{v}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
+          <SelectTrigger className="w-[130px] h-9 text-[14px]">
+            <SelectValue placeholder="全部状态" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">全部状态</SelectItem>
+            <SelectItem value="published">已发布</SelectItem>
+            <SelectItem value="draft">草稿</SelectItem>
+          </SelectContent>
+        </Select>
+        <Input
+          className="flex-1 min-w-[200px] h-9 text-[14px] bg-white"
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
           placeholder="搜索标题/摘要..."
         />
-        <button
-          onClick={handleSearch}
-          className="px-4 py-2 border border-[#e7e5e4] bg-white rounded-[8px] text-[14px] cursor-pointer hover:bg-[#fafaf9]"
-        >
+        <Button onClick={handleSearch} size="sm" className="bg-amber-500 hover:bg-amber-600 text-white">
           搜索
-        </button>
+        </Button>
       </div>
 
       {loading ? (
         <p className="text-center py-[60px] text-[#78716c] text-[15px]">加载中...</p>
       ) : (
         <>
-          <div className="overflow-x-auto bg-white rounded-[12px] border border-[#e7e5e4]">
-            <table className="w-full border-collapse text-[14px]">
-              <thead>
-                <tr className="bg-[#fafaf9] text-left">
-                  <th className="px-4 py-2.5 border-b border-[#e7e5e4] text-[#78716c]">标题</th>
-                  <th className="px-4 py-2.5 border-b border-[#e7e5e4] text-[#78716c]">分类</th>
-                  {isAdmin && <th className="px-4 py-2.5 border-b border-[#e7e5e4] text-[#78716c]">作者</th>}
-                  <th className="px-4 py-2.5 border-b border-[#e7e5e4] text-[#78716c]">状态</th>
-                  <th className="px-4 py-2.5 border-b border-[#e7e5e4] text-[#78716c]">阅读</th>
-                  <th className="px-4 py-2.5 border-b border-[#e7e5e4] text-[#78716c]">更新时间</th>
-                  <th className="px-4 py-2.5 border-b border-[#e7e5e4] text-[#78716c]">操作</th>
-                </tr>
-              </thead>
-              <tbody>
+          <div className="rounded-[12px] border border-[hsl(var(--border))] overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>标题</TableHead>
+                  <TableHead>分类</TableHead>
+                  {isAdmin && <TableHead>作者</TableHead>}
+                  <TableHead>状态</TableHead>
+                  <TableHead>阅读</TableHead>
+                  <TableHead>更新时间</TableHead>
+                  <TableHead>操作</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {articles.length === 0 ? (
-                  <tr><td colSpan={7} className="text-center py-10 text-[#78716c]">暂无文章</td></tr>
+                  <TableRow>
+                    <TableCell colSpan={isAdmin ? 7 : 6} className="text-center py-10 text-[#78716c]">
+                      暂无文章
+                    </TableCell>
+                  </TableRow>
                 ) : (
                   articles.map((a) => (
-                    <tr key={a.id} className="border-b border-[#f5f5f4] last:border-b-0 hover:bg-[#fafaf9]">
-                      <td className="px-4 py-2.5 font-medium">{a.title}</td>
-                      <td className="px-4 py-2.5">{CATEGORY_MAP[a.category] || a.category}</td>
-                      {isAdmin && <td className="px-4 py-2.5">{a.author_name}</td>}
-                      <td className="px-4 py-2.5">
-                        <span
-                          className={`inline-block px-2.5 py-0.5 rounded-[6px] text-[13px] ${
-                            a.is_published ? "bg-[#dcfce7] text-[#166534]" : "bg-[#f1f5f9] text-[#64748b]"
-                          }`}
-                        >
+                    <TableRow key={a.id}>
+                      <TableCell className="font-medium">{a.title}</TableCell>
+                      <TableCell>{CATEGORY_MAP[a.category] || a.category}</TableCell>
+                      {isAdmin && <TableCell>{a.author_name}</TableCell>}
+                      <TableCell>
+                        <Badge variant={a.is_published ? "success" : "secondary"}>
                           {a.is_published ? "已发布" : "草稿"}
-                        </span>
-                      </td>
-                      <td className="px-4 py-2.5">{a.view_count}</td>
-                      <td className="px-4 py-2.5">{new Date(a.updated_at).toLocaleDateString("zh-CN")}</td>
-                      <td className="px-4 py-2.5">
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{a.view_count}</TableCell>
+                      <TableCell>{new Date(a.updated_at).toLocaleDateString("zh-CN")}</TableCell>
+                      <TableCell>
                         <div className="flex gap-2">
-                          <button
+                          <Button
+                            variant="outline"
+                            size="sm"
                             onClick={() => navigate(`/admin/knowledge/${a.id}/edit`)}
-                            className="px-2.5 py-1 border border-[#e7e5e4] bg-white rounded-[6px] text-[13px] cursor-pointer hover:bg-[#fafaf9]"
                           >
                             编辑
-                          </button>
-                          <button
+                          </Button>
+                          <Button
+                            variant={a.is_published ? "default" : "secondary"}
+                            size="sm"
                             onClick={() => handleTogglePublish(a.id)}
-                            className={`px-2.5 py-1 border-none rounded-[6px] text-[13px] cursor-pointer ${
-                              a.is_published
-                                ? "bg-[#f59e0b] text-white hover:bg-[#d97706]"
-                                : "bg-[#16a34a] text-white hover:bg-[#15803d]"
-                            }`}
                           >
                             {a.is_published ? "撤回" : "发布"}
-                          </button>
-                          <button
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
                             onClick={() => handleDelete(a.id, a.title)}
-                            className="px-2.5 py-1 border-none rounded-[6px] text-[13px] cursor-pointer bg-[#ef4444] text-white hover:bg-[#dc2626]"
                           >
                             删除
-                          </button>
+                          </Button>
                         </div>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
 
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-4 mt-8">
-              <button
+              <Button
+                variant="outline"
                 disabled={page <= 1}
                 onClick={() => setPage(page - 1)}
-                className="px-5 py-2 border border-[#e7e5e4] bg-white rounded-[8px] cursor-pointer text-[14px] disabled:opacity-40 disabled:cursor-not-allowed"
+                size="sm"
               >
                 上一页
-              </button>
-              <span className="text-[14px] text-[#78716c]">第 {page}/{totalPages} 页（共 {total} 条）</span>
-              <button
+              </Button>
+              <span className="text-[14px] text-[#78716c]">
+                第 {page}/{totalPages} 页（共 {total} 条）
+              </span>
+              <Button
+                variant="outline"
                 disabled={page >= totalPages}
                 onClick={() => setPage(page + 1)}
-                className="px-5 py-2 border border-[#e7e5e4] bg-white rounded-[8px] cursor-pointer text-[14px] disabled:opacity-40 disabled:cursor-not-allowed"
+                size="sm"
               >
                 下一页
-              </button>
+              </Button>
             </div>
           )}
         </>

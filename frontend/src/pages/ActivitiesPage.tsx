@@ -1,6 +1,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { activityApi } from "../api";
+import { Button } from "../components/ui/button";
+import { Badge } from "../components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
 
 const STATUS_MAP: Record<string, string> = {
   upcoming: "即将开始",
@@ -9,11 +18,11 @@ const STATUS_MAP: Record<string, string> = {
   cancelled: "已取消",
 };
 
-const STATUS_COLOR: Record<string, string> = {
-  upcoming: "#d97706",
-  ongoing: "#16a34a",
-  completed: "#64748b",
-  cancelled: "#ef4444",
+const STATUS_BADGE_MAP: Record<string, "warning" | "success" | "secondary" | "destructive"> = {
+  upcoming: "warning",
+  ongoing: "success",
+  completed: "secondary",
+  cancelled: "destructive",
 };
 
 export default function ActivitiesPage() {
@@ -44,16 +53,20 @@ export default function ActivitiesPage() {
         <h1 className="text-[36px] text-[#292524] mb-2">志愿者活动</h1>
         <p className="text-[#78716c] mb-8">加入我们，用行动温暖每一个小生命</p>
         <div className="flex gap-3 max-w-[600px] mx-auto max-sm:flex-col justify-center">
-          <select
+          <Select
             value={status}
-            onChange={(e) => { setStatus(e.target.value); setPage(1); }}
-            className="px-3 py-3 border-2 border-[#e7e5e4] rounded-[12px] text-[15px] outline-none bg-white"
+            onValueChange={(v) => { setStatus(v); setPage(1); }}
           >
-            <option value="">全部状态</option>
-            {Object.entries(STATUS_MAP).map(([k, v]) => (
-              <option key={k} value={k}>{v}</option>
-            ))}
-          </select>
+            <SelectTrigger className="min-w-[130px]">
+              <SelectValue placeholder="全部状态" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">全部状态</SelectItem>
+              {Object.entries(STATUS_MAP).map(([k, v]) => (
+                <SelectItem key={k} value={k}>{v}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -78,16 +91,10 @@ export default function ActivitiesPage() {
                   )}
                 </div>
                 <div className="p-4">
-                  <span
-                    style={{
-                      fontSize: 12,
-                      color: STATUS_COLOR[a.status] || "#d97706",
-                      fontWeight: 600,
-                    }}
-                  >
+                  <Badge variant={STATUS_BADGE_MAP[a.status] || "warning"} className="mb-1.5">
                     {STATUS_MAP[a.status] || a.status}
-                  </span>
-                  <h3 className="text-[17px] mb-1 mt-1">{a.title}</h3>
+                  </Badge>
+                  <h3 className="text-[17px] mb-1 font-medium">{a.title}</h3>
                   <p className="text-[13px] text-[#78716c] mb-1">📍 {a.location}</p>
                   <p className="text-[13px] text-[#78716c] mb-1">
                     📅 {new Date(a.start_time).toLocaleDateString()}
@@ -102,21 +109,23 @@ export default function ActivitiesPage() {
 
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-4 mt-8">
-              <button
+              <Button
+                variant="outline"
                 disabled={page <= 1}
                 onClick={() => setPage(page - 1)}
-                className="px-5 py-2 border border-[#e7e5e4] bg-white rounded-[8px] cursor-pointer text-[14px] disabled:opacity-40 disabled:cursor-not-allowed"
+                size="sm"
               >
                 上一页
-              </button>
+              </Button>
               <span className="text-[14px] text-[#78716c]">{page} / {totalPages}</span>
-              <button
+              <Button
+                variant="outline"
                 disabled={page >= totalPages}
                 onClick={() => setPage(page + 1)}
-                className="px-5 py-2 border border-[#e7e5e4] bg-white rounded-[8px] cursor-pointer text-[14px] disabled:opacity-40 disabled:cursor-not-allowed"
+                size="sm"
               >
                 下一页
-              </button>
+              </Button>
             </div>
           )}
         </div>

@@ -1,8 +1,17 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { format, parseISO, isValid } from "date-fns";
+import { CalendarIcon } from "lucide-react";
 import { activityApi } from "../api";
 import { useAuthStore } from "../stores/authStore";
 import ImageUploader from "../components/ImageUploader";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { Textarea } from "../components/ui/textarea";
+import { Card, CardContent } from "../components/ui/card";
+import { Calendar } from "../components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "../components/ui/popover";
 
 function toLocalDatetime(iso: string) {
   if (!iso) return "";
@@ -12,6 +21,29 @@ function toLocalDatetime(iso: string) {
 function toISO(local: string) {
   if (!local) return "";
   return new Date(local).toISOString();
+}
+
+function getDateObject(datetime: string): Date | undefined {
+  if (!datetime) return undefined;
+  const d = parseISO(datetime);
+  return isValid(d) ? d : undefined;
+}
+
+function getTimeString(datetime: string): string {
+  if (!datetime) return "";
+  const m = datetime.match(/T(\d{2}:\d{2})/);
+  return m ? m[1] : "";
+}
+
+function updateDatePart(datetime: string, date: Date): string {
+  const d = format(date, "yyyy-MM-dd");
+  const t = getTimeString(datetime) || "00:00";
+  return `${d}T${t}`;
+}
+
+function updateTimePart(datetime: string, time: string): string {
+  const d = datetime ? format(parseISO(datetime), "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd");
+  return `${d}T${time}`;
 }
 
 export default function ActivityEditorPage() {
@@ -95,7 +127,7 @@ export default function ActivityEditorPage() {
 
   return (
     <div className="max-w-[800px] mx-auto">
-      <h1 className="text-[24px] mb-6">{isEdit ? "编辑活动" : "发布活动"}</h1>
+      <h1 className="text-[24px] mb-6 font-semibold">{isEdit ? "编辑活动" : "发布活动"}</h1>
 
       {error && (
         <div className="bg-[#fef2f2] text-[#ef4444] px-4 py-2.5 rounded-[8px] mb-4 text-[14px]">
@@ -103,93 +135,135 @@ export default function ActivityEditorPage() {
         </div>
       )}
 
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-8 rounded-[12px] border border-[#e7e5e4]"
-      >
-        <input
-          className="block w-full px-3.5 py-2.5 border border-[#e7e5e4] rounded-[8px] text-[15px] outline-none transition-colors duration-200 focus:border-[#f59e0b]"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="活动标题"
-          maxLength={100}
-        />
+      <form onSubmit={handleSubmit}>
+        <Card>
+          <CardContent className="p-8 space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="title">活动标题</Label>
+              <Input
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="活动标题"
+                maxLength={100}
+              />
+            </div>
 
-        <div className="grid grid-cols-2 gap-4 mt-4 max-sm:grid-cols-1">
-          <div className="form-group">
-            <label className="block text-[14px] text-[#78716c] mb-1">开始时间</label>
-            <input
-              type="datetime-local"
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-              className="block w-full px-3.5 py-2.5 border border-[#e7e5e4] rounded-[8px] text-[15px] outline-none transition-colors duration-200 focus:border-[#f59e0b]"
-            />
-          </div>
-          <div className="form-group">
-            <label className="block text-[14px] text-[#78716c] mb-1">结束时间</label>
-            <input
-              type="datetime-local"
-              value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-              className="block w-full px-3.5 py-2.5 border border-[#e7e5e4] rounded-[8px] text-[15px] outline-none transition-colors duration-200 focus:border-[#f59e0b]"
-            />
-          </div>
-        </div>
+            <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
+              <div className="space-y-2">
+                <Label>开始时间</Label>
+                <div className="flex gap-2">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="flex-1 justify-start text-left font-normal"
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
+                        {startTime ? format(parseISO(startTime), "yyyy/MM/dd") : <span className="text-muted-foreground">选择日期</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={getDateObject(startTime)}
+                        onSelect={(date) => {
+                          if (date) setStartTime(updateDatePart(startTime, date));
+                        }}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <Input
+                    type="time"
+                    className="w-[120px] shrink-0"
+                    value={getTimeString(startTime)}
+                    onChange={(e) => setStartTime(updateTimePart(startTime, e.target.value))}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>结束时间</Label>
+                <div className="flex gap-2">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="flex-1 justify-start text-left font-normal"
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
+                        {endTime ? format(parseISO(endTime), "yyyy/MM/dd") : <span className="text-muted-foreground">选择日期</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={getDateObject(endTime)}
+                        onSelect={(date) => {
+                          if (date) setEndTime(updateDatePart(endTime, date));
+                        }}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <Input
+                    type="time"
+                    className="w-[120px] shrink-0"
+                    value={getTimeString(endTime)}
+                    onChange={(e) => setEndTime(updateTimePart(endTime, e.target.value))}
+                  />
+                </div>
+              </div>
+            </div>
 
-        <div className="grid grid-cols-2 gap-4 mt-4 max-sm:grid-cols-1">
-          <div className="form-group">
-            <label className="block text-[14px] text-[#78716c] mb-1">活动地点</label>
-            <input
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="如：XX市XX区XX公园"
-              className="block w-full px-3.5 py-2.5 border border-[#e7e5e4] rounded-[8px] text-[15px] outline-none transition-colors duration-200 focus:border-[#f59e0b]"
-            />
-          </div>
-          <div className="form-group">
-            <label className="block text-[14px] text-[#78716c] mb-1">最大报名人数</label>
-            <input
-              type="number"
-              value={maxParticipants}
-              onChange={(e) => setMaxParticipants(Number(e.target.value) || 0)}
-              min="1"
-              max="9999"
-              className="block w-full px-3.5 py-2.5 border border-[#e7e5e4] rounded-[8px] text-[15px] outline-none transition-colors duration-200 focus:border-[#f59e0b]"
-            />
-          </div>
-        </div>
+            <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
+              <div className="space-y-2">
+                <Label htmlFor="location">活动地点</Label>
+                <Input
+                  id="location"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  placeholder="如：XX市XX区XX公园"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="maxParticipants">最大报名人数</Label>
+                <Input
+                  id="maxParticipants"
+                  type="number"
+                  value={maxParticipants}
+                  onChange={(e) => setMaxParticipants(Number(e.target.value) || 0)}
+                  min="1"
+                  max="9999"
+                />
+              </div>
+            </div>
 
-        <div className="mt-4">
-          <ImageUploader value={coverImage} onChange={setCoverImage} />
-        </div>
+            <ImageUploader value={coverImage} onChange={setCoverImage} />
 
-        <div className="form-group mt-4">
-          <label className="block text-[14px] text-[#78716c] mb-1">活动详情描述</label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="活动详情描述..."
-            rows={8}
-            className="block w-full px-3.5 py-2.5 border border-[#e7e5e4] rounded-[8px] text-[15px] outline-none transition-colors duration-200 focus:border-[#f59e0b] resize-y"
-          />
-        </div>
+            <div className="space-y-2">
+              <Label htmlFor="description">活动详情描述</Label>
+              <Textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="活动详情描述..."
+                rows={8}
+              />
+            </div>
 
-        <div className="flex justify-end gap-3 mt-6">
-          <button
-            type="button"
-            onClick={() => navigate("/admin/activities")}
-            className="px-4 py-2 border border-[#e7e5e4] bg-white rounded-[8px] text-[14px] cursor-pointer hover:bg-[#fafaf9]"
-          >
-            取消
-          </button>
-          <button
-            type="submit"
-            disabled={saving}
-            className="inline-flex items-center justify-center px-6 py-2.5 border-none rounded-[8px] text-[14px] font-semibold cursor-pointer transition-all duration-200 no-underline bg-[#f59e0b] text-white hover:bg-[#d97706] disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {saving ? "保存中..." : isEdit ? "保存修改" : "发布活动"}
-          </button>
-        </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => navigate("/admin/activities")}
+              >
+                取消
+              </Button>
+              <Button type="submit" disabled={saving} className="bg-amber-500 hover:bg-amber-600 text-white">
+                {saving ? "保存中..." : isEdit ? "保存修改" : "发布活动"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </form>
     </div>
   );

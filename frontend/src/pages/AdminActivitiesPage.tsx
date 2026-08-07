@@ -2,11 +2,36 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { activityApi } from "../api";
 import { useAuthStore } from "../stores/authStore";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Badge } from "../components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../components/ui/table";
+import { Card, CardContent } from "../components/ui/card";
 
 const STATUS_LABELS: Record<string, string> = {
   upcoming: "招募中",
   ongoing: "进行中",
   completed: "已结束",
+};
+
+const STATUS_BADGE_MAP: Record<string, "warning" | "success" | "secondary"> = {
+  upcoming: "warning",
+  ongoing: "success",
+  completed: "secondary",
 };
 
 interface Enrollment {
@@ -111,196 +136,195 @@ export default function AdminActivitiesPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-[24px]">志愿活动管理</h1>
-        <button
-          onClick={() => navigate("/admin/activities/new")}
-          className="inline-flex items-center justify-center px-6 py-2.5 border-none rounded-[8px] text-[14px] font-semibold cursor-pointer transition-all duration-200 no-underline bg-[#f59e0b] text-white hover:bg-[#d97706]"
-        >
-          发布活动
-        </button>
+        <h1 className="text-[24px] font-semibold">志愿活动管理</h1>
+        <Button onClick={() => navigate("/admin/activities/new")} className="bg-amber-500 hover:bg-amber-600 text-white">发布活动</Button>
       </div>
 
       <div className="flex flex-wrap gap-3 mb-4">
-        <select
-          value={statusFilter}
-          onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-          className="px-3 py-2 border border-[#e7e5e4] rounded-[8px] text-[14px] outline-none bg-white"
-        >
-          <option value="">全部状态</option>
-          <option value="upcoming">招募中</option>
-          <option value="ongoing">进行中</option>
-          <option value="completed">已结束</option>
-        </select>
-        <input
-          className="flex-1 min-w-[200px] px-3 py-2 border border-[#e7e5e4] rounded-[8px] text-[14px] outline-none focus:border-[#f59e0b]"
+        <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
+          <SelectTrigger className="w-[140px] h-9 text-[14px]">
+            <SelectValue placeholder="全部状态" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">全部状态</SelectItem>
+            <SelectItem value="upcoming">招募中</SelectItem>
+            <SelectItem value="ongoing">进行中</SelectItem>
+            <SelectItem value="completed">已结束</SelectItem>
+          </SelectContent>
+        </Select>
+        <Input
+          className="flex-1 min-w-[200px] h-9 text-[14px] bg-white"
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
           placeholder="搜索活动标题..."
         />
-        <button
-          onClick={handleSearch}
-          className="px-4 py-2 border border-[#e7e5e4] bg-white rounded-[8px] text-[14px] cursor-pointer hover:bg-[#fafaf9]"
-        >
+        <Button onClick={handleSearch} size="sm" className="bg-amber-500 hover:bg-amber-600 text-white">
           搜索
-        </button>
+        </Button>
       </div>
 
       {loading ? (
         <p className="text-center py-[60px] text-[#78716c] text-[15px]">加载中...</p>
       ) : (
         <>
-          <div className="overflow-x-auto bg-white rounded-[12px] border border-[#e7e5e4]">
-            <table className="w-full border-collapse text-[14px]">
-              <thead>
-                <tr className="bg-[#fafaf9] text-left">
-                  <th className="px-4 py-2.5 border-b border-[#e7e5e4] text-[#78716c]">标题</th>
-                  <th className="px-4 py-2.5 border-b border-[#e7e5e4] text-[#78716c]">地点</th>
-                  <th className="px-4 py-2.5 border-b border-[#e7e5e4] text-[#78716c]">时间</th>
-                  <th className="px-4 py-2.5 border-b border-[#e7e5e4] text-[#78716c]">报名</th>
-                  <th className="px-4 py-2.5 border-b border-[#e7e5e4] text-[#78716c]">状态</th>
-                  <th className="px-4 py-2.5 border-b border-[#e7e5e4] text-[#78716c]">操作</th>
-                </tr>
-              </thead>
-              <tbody>
+          <div className="rounded-[12px] border border-[hsl(var(--border))] overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>标题</TableHead>
+                  <TableHead>地点</TableHead>
+                  <TableHead>时间</TableHead>
+                  <TableHead>报名</TableHead>
+                  <TableHead>状态</TableHead>
+                  <TableHead>操作</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {activities.length === 0 ? (
-                  <tr><td colSpan={6} className="text-center py-10 text-[#78716c]">暂无活动</td></tr>
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-10 text-[#78716c]">
+                      暂无活动
+                    </TableCell>
+                  </TableRow>
                 ) : (
                   activities.map((a) => (
-                    <>
-                      <tr key={a.id} className="border-b border-[#f5f5f4] last:border-b-0 hover:bg-[#fafaf9]">
-                        <td className="px-4 py-2.5 font-medium">{a.title}</td>
-                        <td className="px-4 py-2.5">{a.location}</td>
-                        <td className="px-4 py-2.5">
-                          {formatTime(a.start_time)} ~ {new Date(a.end_time).toLocaleString("zh-CN")}
-                        </td>
-                        <td className="px-4 py-2.5">
-                          <button
-                            onClick={() => toggleEnrollments(a.id)}
-                            className="px-2.5 py-1 border border-[#e7e5e4] bg-white rounded-[6px] text-[13px] cursor-pointer hover:bg-[#fafaf9]"
+                    <TableRow key={a.id}>
+                      <TableCell className="font-medium">{a.title}</TableCell>
+                      <TableCell>{a.location}</TableCell>
+                      <TableCell>
+                        {formatTime(a.start_time)} ~ {new Date(a.end_time).toLocaleString("zh-CN")}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => toggleEnrollments(a.id)}
+                        >
+                          {a.enrolled_count}/{a.max_participants}人
+                        </Button>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={STATUS_BADGE_MAP[a.status] || "secondary"}>
+                          {STATUS_LABELS[a.status] || a.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2 flex-wrap">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => navigate(`/admin/activities/${a.id}/edit`)}
                           >
-                            {a.enrolled_count}/{a.max_participants}人
-                          </button>
-                        </td>
-                        <td className="px-4 py-2.5">
-                          <span
-                            className={`inline-block px-2.5 py-0.5 rounded-[6px] text-[13px] ${
-                              a.status === "upcoming"
-                                ? "bg-[#fef3c7] text-[#d97706]"
-                                : a.status === "ongoing"
-                                ? "bg-[#dcfce7] text-[#16a34a]"
-                                : "bg-[#e2e8f0] text-[#64748b]"
-                            }`}
+                            编辑
+                          </Button>
+                          {a.status !== "upcoming" && (
+                            <Button
+                              variant="default"
+                              size="sm"
+                              onClick={() => handleStatusChange(a.id, "upcoming")}
+                            >
+                              改招募
+                            </Button>
+                          )}
+                          {a.status !== "ongoing" && (
+                            <Button
+                              variant="default"
+                              size="sm"
+                              onClick={() => handleStatusChange(a.id, "ongoing")}
+                            >
+                              进行中
+                            </Button>
+                          )}
+                          {a.status !== "completed" && (
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => handleStatusChange(a.id, "completed")}
+                            >
+                              结束
+                            </Button>
+                          )}
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDelete(a.id, a.title)}
                           >
-                            {STATUS_LABELS[a.status] || a.status}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2.5">
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => navigate(`/admin/activities/${a.id}/edit`)}
-                              className="px-2.5 py-1 border border-[#e7e5e4] bg-white rounded-[6px] text-[13px] cursor-pointer hover:bg-[#fafaf9]"
-                            >
-                              编辑
-                            </button>
-                            {a.status !== "upcoming" && (
-                              <button
-                                onClick={() => handleStatusChange(a.id, "upcoming")}
-                                className="px-2.5 py-1 border-none rounded-[6px] text-[13px] cursor-pointer bg-[#f59e0b] text-white hover:bg-[#d97706]"
-                              >
-                                改招募
-                              </button>
-                            )}
-                            {a.status !== "ongoing" && (
-                              <button
-                                onClick={() => handleStatusChange(a.id, "ongoing")}
-                                className="px-2.5 py-1 border-none rounded-[6px] text-[13px] cursor-pointer bg-[#3b82f6] text-white hover:bg-[#2563eb]"
-                              >
-                                进行中
-                              </button>
-                            )}
-                            {a.status !== "completed" && (
-                              <button
-                                onClick={() => handleStatusChange(a.id, "completed")}
-                                className="px-2.5 py-1 border-none rounded-[6px] text-[13px] cursor-pointer bg-[#f59e0b] text-white hover:bg-[#d97706]"
-                              >
-                                结束
-                              </button>
-                            )}
-                            <button
-                              onClick={() => handleDelete(a.id, a.title)}
-                              className="px-2.5 py-1 border-none rounded-[6px] text-[13px] cursor-pointer bg-[#ef4444] text-white hover:bg-[#dc2626]"
-                            >
-                              删除
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                      {expandedId === a.id && (
-                        <tr key={`${a.id}-enroll`}>
-                          <td colSpan={6} className="px-4 py-3 bg-[#fafaf9]">
-                            <div className="p-4 bg-white rounded-[8px] border border-[#e7e5e4]">
-                              <h4 className="text-[15px] mb-3">报名人员</h4>
-                              {a.enrollments.length === 0 ? (
-                                <p className="text-center py-8 text-[#78716c] text-[15px]">暂无报名</p>
-                              ) : (
-                                <table className="w-full border-collapse text-[13px]">
-                                  <thead>
-                                    <tr className="text-left">
-                                      <th className="px-3 py-2 border-b border-[#e7e5e4] text-[#78716c]">用户名</th>
-                                      <th className="px-3 py-2 border-b border-[#e7e5e4] text-[#78716c]">邮箱</th>
-                                      <th className="px-3 py-2 border-b border-[#e7e5e4] text-[#78716c]">备注</th>
-                                      <th className="px-3 py-2 border-b border-[#e7e5e4] text-[#78716c]">签到状态</th>
-                                      <th className="px-3 py-2 border-b border-[#e7e5e4] text-[#78716c]">报名时间</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {a.enrollments.map((e) => (
-                                      <tr key={e.id} className="border-b border-[#f5f5f4] last:border-b-0">
-                                        <td className="px-3 py-2">{e.user_name}</td>
-                                        <td className="px-3 py-2">{e.user_email}</td>
-                                        <td className="px-3 py-2">{e.note || "-"}</td>
-                                        <td className="px-3 py-2">
-                                          {e.is_checked_in ? (
-                                            <span className="inline-block px-2.5 py-0.5 rounded-[6px] text-[13px] bg-[#dcfce7] text-[#166534]">已签到</span>
-                                          ) : (
-                                            <span className="inline-block px-2.5 py-0.5 rounded-[6px] text-[13px] bg-[#f1f5f9] text-[#64748b]">未签到</span>
-                                          )}
-                                        </td>
-                                        <td className="px-3 py-2">{formatTime(e.created_at)}</td>
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </>
+                            删除
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
                   ))
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
+
+          {/* Expandable enrollments */}
+          {expandedId && (() => {
+            const a = activities.find((x) => x.id === expandedId);
+            if (!a) return null;
+            return (
+              <Card className="mt-4">
+                <CardContent className="p-4">
+                  <h4 className="text-[15px] font-medium mb-3">报名人员</h4>
+                  {a.enrollments.length === 0 ? (
+                    <p className="text-center py-8 text-[#78716c] text-[15px]">暂无报名</p>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>用户名</TableHead>
+                          <TableHead>邮箱</TableHead>
+                          <TableHead>备注</TableHead>
+                          <TableHead>签到状态</TableHead>
+                          <TableHead>报名时间</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {a.enrollments.map((e) => (
+                          <TableRow key={e.id}>
+                            <TableCell>{e.user_name}</TableCell>
+                            <TableCell>{e.user_email}</TableCell>
+                            <TableCell>{e.note || "-"}</TableCell>
+                            <TableCell>
+                              <Badge variant={e.is_checked_in ? "success" : "secondary"}>
+                                {e.is_checked_in ? "已签到" : "未签到"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>{formatTime(e.created_at)}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })()}
 
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-4 mt-8">
-              <button
+              <Button
+                variant="outline"
                 disabled={page <= 1}
                 onClick={() => setPage(page - 1)}
-                className="px-5 py-2 border border-[#e7e5e4] bg-white rounded-[8px] cursor-pointer text-[14px] disabled:opacity-40 disabled:cursor-not-allowed"
+                size="sm"
               >
                 上一页
-              </button>
-              <span className="text-[14px] text-[#78716c]">第 {page}/{totalPages} 页（共 {total} 条）</span>
-              <button
+              </Button>
+              <span className="text-[14px] text-[#78716c]">
+                第 {page}/{totalPages} 页（共 {total} 条）
+              </span>
+              <Button
+                variant="outline"
                 disabled={page >= totalPages}
                 onClick={() => setPage(page + 1)}
-                className="px-5 py-2 border border-[#e7e5e4] bg-white rounded-[8px] cursor-pointer text-[14px] disabled:opacity-40 disabled:cursor-not-allowed"
+                size="sm"
               >
                 下一页
-              </button>
+              </Button>
             </div>
           )}
         </>

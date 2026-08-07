@@ -1,6 +1,15 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { knowledgeApi } from "../api";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
 
 const CATEGORY_MAP: Record<string, string> = {
   care: "日常护理",
@@ -46,29 +55,30 @@ export default function KnowledgeListPage() {
         <h1 className="text-[36px] text-[#292524] mb-2">救助知识</h1>
         <p className="text-[#78716c] mb-8">学习科学养宠知识，让每一个生命都被温柔以待</p>
         <div className="flex gap-3 max-w-[600px] mx-auto max-sm:flex-col">
-          <select
+          <Select
             value={category}
-            onChange={(e) => { setCategory(e.target.value); setPage(1); }}
-            className="px-3 py-3 border-2 border-[#e7e5e4] rounded-[12px] text-[15px] outline-none bg-white"
+            onValueChange={(v) => { setCategory(v); setPage(1); }}
           >
-            <option value="">全部分类</option>
-            {Object.entries(CATEGORY_MAP).map(([k, v]) => (
-              <option key={k} value={k}>{v}</option>
-            ))}
-          </select>
-          <input
+            <SelectTrigger className="h-[48px] min-w-[130px] w-auto">
+              <SelectValue placeholder="全部分类" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">全部分类</SelectItem>
+              {Object.entries(CATEGORY_MAP).map(([k, v]) => (
+                <SelectItem key={k} value={k}>{v}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Input
             placeholder="搜索文章标题..."
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-            className="flex-1 px-4 py-3 border-2 border-[#e7e5e4] rounded-[12px] text-[15px] outline-none transition-colors duration-200 focus:border-[#f59e0b]"
+            className="flex-1 min-w-0 h-[48px]"
           />
-          <button
-            onClick={handleSearch}
-            className="inline-flex items-center justify-center px-8 py-3 border-none rounded-[8px] text-[14px] font-semibold cursor-pointer transition-all duration-200 no-underline bg-[#f59e0b] text-white hover:bg-[#d97706]"
-          >
+          <Button onClick={handleSearch} size="lg" className="bg-amber-500 hover:bg-amber-600 text-white h-[48px] px-8">
             搜索
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -93,10 +103,10 @@ export default function KnowledgeListPage() {
                   )}
                 </div>
                 <div className="p-4">
-                  <span style={{ fontSize: 12, color: "#d97706", fontWeight: 600 }}>
+                  <span className="text-[12px] text-[#d97706] font-semibold">
                     {CATEGORY_MAP[a.category] || a.category}
                   </span>
-                  <h3 className="text-[17px] mb-1 mt-1">{a.title}</h3>
+                  <h3 className="text-[17px] mb-1 mt-1 font-medium">{a.title}</h3>
                   <p className="text-[13px] text-[#78716c] mb-1">{a.summary || "阅读全文 →"}</p>
                   <p className="text-[12px] text-[#d97706]">👁 {a.view_count} 次阅读</p>
                 </div>
@@ -106,21 +116,23 @@ export default function KnowledgeListPage() {
 
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-4 mt-8">
-              <button
+              <Button
+                variant="outline"
                 disabled={page <= 1}
                 onClick={() => setPage(page - 1)}
-                className="px-5 py-2 border border-[#e7e5e4] bg-white rounded-[8px] cursor-pointer text-[14px] disabled:opacity-40 disabled:cursor-not-allowed"
+                size="sm"
               >
                 上一页
-              </button>
+              </Button>
               <span className="text-[14px] text-[#78716c]">{page} / {totalPages}</span>
-              <button
+              <Button
+                variant="outline"
                 disabled={page >= totalPages}
                 onClick={() => setPage(page + 1)}
-                className="px-5 py-2 border border-[#e7e5e4] bg-white rounded-[8px] cursor-pointer text-[14px] disabled:opacity-40 disabled:cursor-not-allowed"
+                size="sm"
               >
                 下一页
-              </button>
+              </Button>
             </div>
           )}
         </div>

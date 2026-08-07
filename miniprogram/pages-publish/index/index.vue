@@ -24,8 +24,8 @@
 
         <u-form-item label="性别">
           <u-radio-group v-model="form.gender" placement="row">
-            <u-radio label="公" name="male" />
-            <u-radio label="母" name="female" />
+            <u-radio label="雌" name="female" />
+            <u-radio label="雄" name="male" />
             <u-radio label="未知" name="unknown" />
           </u-radio-group>
         </u-form-item>

@@ -1,10 +1,6 @@
 import { useEffect, useState } from "react";
 import { donationApi } from "../api";
-
-const TYPE_MAP: Record<string, string> = {
-  cash: "💰 现金",
-  goods: "📦 物资",
-};
+import { Button } from "../components/ui/button";
 
 export default function DonationsPage() {
   const [donations, setDonations] = useState<any[]>([]);
@@ -49,13 +45,11 @@ export default function DonationsPage() {
                   className="h-[120px] overflow-hidden flex items-center justify-center"
                   style={{ background: d.donation_type === "cash" ? "#fef3c7" : "#dbeafe" }}
                 >
-                  <div style={{ fontSize: 36 }}>{d.donation_type === "cash" ? "💰" : "📦"}</div>
+                  <div className="text-[36px]">{d.donation_type === "cash" ? "💰" : "📦"}</div>
                 </div>
                 <div className="p-4">
                   <h3 className="text-[17px] mb-1">
-                    {d.is_anonymous
-                      ? "匿名爱心人士"
-                      : `用户 #${d.user_id}`}
+                    {d.is_anonymous ? "匿名爱心人士" : `用户 #${d.user_id}`}
                   </h3>
                   <p className="text-[13px] text-[#78716c] mb-1">
                     {d.donation_type === "cash"
@@ -80,21 +74,23 @@ export default function DonationsPage() {
 
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-4 mt-8">
-              <button
+              <Button
+                variant="outline"
                 disabled={page <= 1}
                 onClick={() => setPage(page - 1)}
-                className="px-5 py-2 border border-[#e7e5e4] bg-white rounded-[8px] cursor-pointer text-[14px] disabled:opacity-40 disabled:cursor-not-allowed"
+                size="sm"
               >
                 上一页
-              </button>
+              </Button>
               <span className="text-[14px] text-[#78716c]">{page} / {totalPages}</span>
-              <button
+              <Button
+                variant="outline"
                 disabled={page >= totalPages}
                 onClick={() => setPage(page + 1)}
-                className="px-5 py-2 border border-[#e7e5e4] bg-white rounded-[8px] cursor-pointer text-[14px] disabled:opacity-40 disabled:cursor-not-allowed"
+                size="sm"
               >
                 下一页
-              </button>
+              </Button>
             </div>
           )}
         </div>
