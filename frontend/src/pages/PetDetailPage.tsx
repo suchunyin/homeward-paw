@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { petApi } from "../api";
+import { toast } from "sonner";
+import { petApi, adoptionApi, type AdoptionApplication } from "../api";
 import { useAuthStore } from "../stores/authStore";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
@@ -40,6 +41,14 @@ const STATUS_MAP: Record<string, string> = {
   hidden: "已隐藏",
 };
 
+const ADOPTION_STATUS_MAP: Record<string, { label: string; color: "warning" | "success" | "destructive" | "secondary" | "info" }> = {
+  pending: { label: "等待审核", color: "warning" },
+  approved: { label: "已通过", color: "success" },
+  rejected: { label: "已拒绝", color: "destructive" },
+  cancelled: { label: "已取消", color: "secondary" },
+  completed: { label: "已完成", color: "info" },
+};
+
 const SPECIES_MAP: Record<string, string> = {
   "狗": "🐶",
   "猫": "🐱",
@@ -51,15 +60,25 @@ export default function PetDetailPage() {
   const navigate = useNavigate();
   const token = useAuthStore((s) => s.token);
   const [pet, setPet] = useState<PetDetail | null>(null);
+  const [myApplication, setMyApplication] = useState<AdoptionApplication | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!id) return;
-    petApi.get(Number(id))
-      .then((res) => setPet(res.data))
+    const petId = Number(id);
+    Promise.all([
+      petApi.get(petId),
+      token ? adoptionApi.check(petId).catch(() => ({ data: { has_applied: false, application: null } })) : Promise.resolve({ data: { has_applied: false, application: null } }),
+    ])
+      .then(([petRes, checkRes]) => {
+        setPet(petRes.data);
+        if (checkRes.data.has_applied) {
+          setMyApplication(checkRes.data.application);
+        }
+      })
       .catch(() => navigate("/", { replace: true }))
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, token]);
 
   const handleCloudAdopt = () => {
     if (!token) {
@@ -110,10 +129,60 @@ export default function PetDetailPage() {
       {(pet.city || pet.district) && (
         <p className="text-[12px] text-[#d97706]">📍 {pet.city} {pet.district}</p>
       )}
+      {/* 领养申请状态提示 */}
+      {myApplication && (
+        <div className="mt-6 p-4 rounded-lg border border-[#e7e5e4] bg-[#fafaf9]">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-[14px] text-[#78716c]">我的领养申请：</span>
+            <Badge variant={ADOPTION_STATUS_MAP[myApplication.status]?.color as any}>
+              {ADOPTION_STATUS_MAP[myApplication.status]?.label || myApplication.status}
+            </Badge>
+          </div>
+          <p className="text-[13px] text-[#78716c]">
+            {myApplication.status === "pending"
+              ? "您的申请正在审核中，请耐心等待救助站联系您。"
+              : myApplication.status === "approved"
+              ? "恭喜！您的领养申请已通过，救助站会尽快联系您。"
+              : myApplication.status === "rejected"
+              ? "很遗憾，您的领养申请未被通过。"
+              : myApplication.status === "completed"
+              ? "领养流程已完成，感谢您给小动物一个温暖的家！"
+              : "申请已取消。"}
+          </p>
+          {myApplication.reply && (
+            <p className="text-[13px] text-[#292524] mt-1 bg-[#fef3c7] p-2 rounded">
+              💬 回复：{myApplication.reply}
+            </p>
+          )}
+          <Button
+            variant="ghost"
+            className="mt-2 text-[#d97706] p-0 h-auto"
+            onClick={() => navigate("/my-applications")}
+          >
+            查看详情 →
+          </Button>
+        </div>
+      )}
+
       <div className="mt-4 flex gap-3">
         <Button onClick={handleCloudAdopt}>我要云养</Button>
-        <Button variant="outline" className="text-[#d97706] border-[#f59e0b] hover:bg-[#fef3c7]">
-          申请领养
+        <Button
+          variant="outline"
+          disabled={!!myApplication || pet.status !== "available"}
+          className="text-[#d97706] border-[#f59e0b] hover:bg-[#fef3c7] disabled:opacity-50 disabled:cursor-not-allowed"
+          onClick={() => {
+            if (!token) {
+              navigate("/login", { replace: true });
+              return;
+            }
+            if (pet.status !== "available") {
+              toast.error("该宠物暂不可领养");
+              return;
+            }
+            navigate(`/pet/${pet.id}/adopt`);
+          }}
+        >
+          {myApplication ? "已申请" : "申请领养"}
         </Button>
       </div>
     </div>

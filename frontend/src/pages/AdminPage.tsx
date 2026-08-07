@@ -148,7 +148,7 @@ export default function AdminPage() {
 
   return (
     <div>
-      <h1 className="text-[24px] mb-6 font-semibold">系统管理</h1>
+      <h1 className="text-[24px] mb-6 font-semibold">用户管理</h1>
 
       {message && (
         <div

@@ -82,7 +82,7 @@
 			"pages": [
 				{
 					"path": "list/list",
-					"style": { "navigationBarTitleText": "救助知识" }
+					"style": { "navigationBarTitleText": "宠物知识" }
 				},
 				{
 					"path": "detail/detail",

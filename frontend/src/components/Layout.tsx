@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
+import { Toaster } from "sonner";
 import { useAuthStore } from "../stores/authStore";
 import { Button } from "./ui/button";
 
@@ -74,7 +75,8 @@ export default function Layout() {
 
   /* ─── 构建导航项 ─── */
   const commonItems: NavItem[] = [
-    { to: "/knowledge", label: "救助知识" },
+    { to: "/", label: "首页" },
+    { to: "/knowledge", label: "宠物知识" },
     { to: "/donations", label: "爱心捐赠" },
     { to: "/activities", label: "志愿活动" },
   ];
@@ -82,7 +84,7 @@ export default function Layout() {
   const authedItems: NavItem[] = [
     {
       to: "/admin",
-      label: "系统管理",
+      label: "用户管理",
       className: "!text-[#ef4444] !font-semibold",
       requireRole: ["admin"],
     },
@@ -96,7 +98,17 @@ export default function Layout() {
       label: "活动管理",
       requireRole: ["admin", "shelter"],
     },
-    { to: "/publish", label: "发布领养" },
+    {
+      to: "/admin/pets",
+      label: "领养管理",
+      requireRole: ["admin", "shelter"],
+    },
+    {
+      to: "/admin/adoptions",
+      label: "申请审核",
+      requireRole: ["admin", "shelter"],
+    },
+    { to: "/my-applications", label: "我的申请" },
     { to: "/cloud-pets", label: "云养宠" },
     { to: "/profile", label: user?.username || "个人中心" },
     { label: "退出", isButton: true },
@@ -234,6 +246,9 @@ export default function Layout() {
       <main className="flex-1 max-w-[1200px] w-full mx-auto p-6 max-sm:p-4">
         <Outlet />
       </main>
+
+      {/* ─── Toast 通知容器 ─── */}
+      <Toaster position="top-center" richColors />
 
       {/* ─── 页脚 ─── */}
       <footer className="text-center p-6 text-[#78716c] text-[13px] border-t border-[#e7e5e4]">

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { knowledgeApi } from "../api";
 import { useAuthStore } from "../stores/authStore";
 import { Button } from "../components/ui/button";
@@ -94,7 +95,7 @@ export default function AdminKnowledgePage() {
       await knowledgeApi.publishToggle(id);
       fetchArticles();
     } catch {
-      alert("操作失败");
+      toast.error("操作失败");
     }
   };
 
@@ -104,7 +105,7 @@ export default function AdminKnowledgePage() {
       await knowledgeApi.delete(id);
       fetchArticles();
     } catch {
-      alert("删除失败");
+      toast.error("删除失败");
     }
   };
 

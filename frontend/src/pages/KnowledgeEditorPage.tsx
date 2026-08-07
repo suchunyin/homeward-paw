@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "sonner";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import ImageUploader from "../components/ImageUploader";
@@ -103,7 +104,7 @@ export default function KnowledgeEditorPage() {
           const range = editor.getSelection(true);
           editor.insertEmbed(range.index, "image", url);
         } catch {
-          alert("图片上传失败");
+          toast.error("图片上传失败");
         }
       };
       input.click();

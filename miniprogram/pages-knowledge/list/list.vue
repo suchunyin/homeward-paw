@@ -1,7 +1,7 @@
 <template>
   <view class="container">
     <view class="hero">
-      <text class="hero-title">救助知识</text>
+      <text class="hero-title">宠物知识</text>
       <text class="hero-desc">科学养宠，让爱更有力量</text>
     </view>
 

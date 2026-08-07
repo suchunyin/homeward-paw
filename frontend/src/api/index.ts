@@ -58,19 +58,99 @@ export const petApi = {
   create: (data: object) => api.post("/pets", data),
   update: (id: number, data: object) => api.put(`/pets/${id}`, data),
   delete: (id: number) => api.delete(`/pets/${id}`),
+  // 管理端
+  manageList: (params: Record<string, unknown> = {}) =>
+    api.get("/pets/manage/list", { params }),
+  manageGet: (id: number) => api.get(`/pets/manage/${id}`),
+  manageUpdate: (id: number, data: object) => api.put(`/pets/manage/${id}`, data),
+  manageDelete: (id: number) => api.delete(`/pets/manage/${id}`),
+  toggleStatus: (id: number, status: string) =>
+    api.put(`/pets/manage/${id}/status`, null, { params: { status } }),
 };
 
 // ── 领养 ──
+
+/** 养宠经历 key → 中文名称 */
+export const PET_EXPERIENCE_MAP: Record<string, string> = {
+  none: "从未养过",
+  some: "养过但目前没有",
+  current: "目前正在养",
+  professional: "丰富经验",
+};
+
+/** 住房类型 key → 中文名称 */
+export const HOUSING_TYPE_MAP: Record<string, string> = {
+  own_house: "自有住房",
+  rent_long: "长期租房（1年+）",
+  rent_short: "短期租房",
+  dorm: "学校宿舍",
+  apartment: "公寓",
+  house: "独立房屋",
+  dormitory: "宿舍",
+  other: "其他",
+};
+
+export interface AdoptionApplication {
+  id: number;
+  user_id: number;
+  pet_id: number;
+  status: "pending" | "approved" | "rejected" | "cancelled" | "completed";
+  message: string;
+  reply: string;
+  real_name: string;
+  phone: string;
+  housing_type: string;
+  has_sealed_window: boolean;
+  family_agree: boolean;
+  family_allergy: boolean;
+  pet_experience: string;
+  reason: string;
+  agree_terms: boolean;
+  agree_follow_up: boolean;
+  created_at: string;
+  updated_at: string;
+  // 扩展字段（AdoptionWithPetOut）
+  pet_name?: string;
+  pet_breed?: string;
+  pet_cover_image?: string;
+  applicant_name?: string;
+  applicant_phone?: string;
+}
+
+export interface AdoptionCheckResult {
+  has_applied: boolean;
+  application: AdoptionApplication | null;
+}
+
 export const adoptionApi = {
-  create: (data: { pet_id: number; message?: string }) =>
+  create: (data: {
+    pet_id: number;
+    real_name: string;
+    phone: string;
+    housing_type: string;
+    has_sealed_window: boolean;
+    family_agree: boolean;
+    family_allergy: boolean;
+    pet_experience: string;
+    reason: string;
+    agree_terms: boolean;
+    agree_follow_up: boolean;
+    message?: string;
+  }) =>
     api.post("/adoptions", data),
   list: (params: Record<string, unknown> = {}) =>
     api.get("/adoptions", { params }),
   update: (id: number, data: { status?: string; reply?: string }) =>
     api.put(`/adoptions/${id}`, data),
+  // 检查是否已申请某宠物
+  check: (petId: number) =>
+    api.get<AdoptionCheckResult>(`/adoptions/check/${petId}`),
+  // 救助站/管理员查看收到的申请
+  listReceived: (params: Record<string, unknown> = {}) =>
+    api.get<AdoptionApplication[]>("/adoptions/received", { params }),
 };
 
-// ── 救助知识 ──
+// ── 宠物知识 ──
 export const knowledgeApi = {
   list: (params: { page?: number; page_size?: number; category?: string; keyword?: string } = {}) =>
     api.get("/knowledge", { params }),

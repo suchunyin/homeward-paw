@@ -52,7 +52,7 @@ export default function KnowledgeListPage() {
   return (
     <div>
       <div className="text-center pt-8 pb-6">
-        <h1 className="text-[36px] text-[#292524] mb-2">救助知识</h1>
+        <h1 className="text-[36px] text-[#292524] mb-2">宠物知识</h1>
         <p className="text-[#78716c] mb-8">学习科学养宠知识，让每一个生命都被温柔以待</p>
         <div className="flex gap-3 max-w-[600px] mx-auto max-sm:flex-col">
           <Select

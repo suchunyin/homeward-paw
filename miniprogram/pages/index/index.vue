@@ -30,7 +30,7 @@
     <view class="quick-nav">
       <view class="nav-item" @tap="goPage('/pages-knowledge/list/list')">
         <text class="nav-icon">📖</text>
-        <text class="nav-label">救助知识</text>
+        <text class="nav-label">宠物知识</text>
       </view>
       <view class="nav-item" @tap="goPage('/pages-activity/list/list')">
         <text class="nav-icon">🎪</text>
